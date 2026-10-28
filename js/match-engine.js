@@ -271,8 +271,20 @@
       return `🟨 ${c.yellow.length} 🟥 ${c.red.length}`;
     }
 
-    // Vencedor de um jogo de mata-mata (placar ou pênaltis)
+    // Placar agregado: na FINAL (jogo de volta) soma o jogo de ida; nos demais jogos é o próprio placar
+    function getAggregate(m) {
+      if (!m.firstLeg) return { home: m.homeScore, away: m.awayScore };
+      return { home: m.homeScore + m.firstLeg.awayScore, away: m.awayScore + m.firstLeg.homeScore };
+    }
+
+    function matchIsTied(m) {
+      const a = getAggregate(m);
+      return a.home === a.away;
+    }
+
+    // Vencedor de um jogo de mata-mata (placar, agregado ou pênaltis)
     function matchHomeWon(m) {
-      if (m.homeScore !== m.awayScore) return m.homeScore > m.awayScore;
+      const a = getAggregate(m);
+      if (a.home !== a.away) return a.home > a.away;
       return m.penWinner === 'home';
     }

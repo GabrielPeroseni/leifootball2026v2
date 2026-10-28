@@ -34,10 +34,17 @@
       } else if (tournamentStage === 'PLAYOFFS') {
         currentBrasfootState.currentMatches.forEach(m => recordHumanMatchStats(m));
 
-        // Empates: jogos com jogador real têm disputa animada em tela cheia; os demais são resolvidos na hora
+        // FINAL em dois jogos: terminou a IDA -> monta a VOLTA (mando invertido), sem pênaltis ainda
+        const playing = currentBrasfootState.currentMatches;
+        if (playing.length === 1 && playing[0].leg === 1) {
+          startFinalSecondLeg(playing[0]);
+          return;
+        }
+
+        // Empates (no agregado, na final): jogos com jogador real têm disputa animada; os demais são resolvidos na hora
         const humanTied = [];
         currentBrasfootState.currentMatches.forEach(m => {
-          if (m.homeScore !== m.awayScore) return;
+          if (!matchIsTied(m)) return;
           if (m.home.isHuman || m.away.isHuman) humanTied.push(m);
           else resolveShootoutInstantly(m);
         });
@@ -214,16 +221,37 @@
     function createKnockoutPairings(teamList) {
       let matches = [];
       for (let i = 0; i < teamList.length; i += 2) {
-        matches.push({
+        const match = {
           home: teamList[i],
           away: teamList[i+1],
           homeScore: 0,
           awayScore: 0,
           events: [],
           stats: { homeShots: 0, awayShots: 0, homePossession: 50, awayPossession: 50 }
-        });
+        };
+        // A FINAL (só 2 times) é disputada em dois jogos: ida e volta
+        if (teamList.length === 2) match.leg = 1;
+        matches.push(match);
       }
       return matches;
+    }
+
+    // Jogo de VOLTA da final: o mando se inverte e o jogo de ida entra no agregado
+    function startFinalSecondLeg(first) {
+      const second = {
+        home: first.away,
+        away: first.home,
+        homeScore: 0,
+        awayScore: 0,
+        events: [`↩️ Jogo de ida: ${first.home.name} ${first.homeScore} x ${first.awayScore} ${first.away.name}`],
+        stats: { homeShots: 0, awayShots: 0, homePossession: 50, awayPossession: 50 },
+        leg: 2,
+        firstLeg: { homeScore: first.homeScore, awayScore: first.awayScore }
+      };
+      tournamentData.bracket.matches = [second];
+      setupPlayoffRoundMatches();
+      broadcastState();
+      runCurrentMatchesLoop();
     }
 
     function setupPlayoffRoundMatches() {

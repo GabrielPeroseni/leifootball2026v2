@@ -87,7 +87,7 @@
       if (tournamentStage === 'PLAYOFFS') titleStage = "🏆 ESTADUALZÃO - MATA-MATA (32 TIMES)";
 
       document.getElementById('phase-indicator').innerText = titleStage;
-      document.getElementById('round-indicator').innerText = tournamentStage === 'PLAYOFFS' ? 'Mata-Mata em Tempo Real' : `Rodada ${tournamentData.round} de ${tournamentData.maxRounds}`;
+      document.getElementById('round-indicator').innerText = tournamentStage === 'PLAYOFFS' ? ((currentBrasfootState.currentMatches.length === 1 && currentBrasfootState.currentMatches[0].leg) ? (currentBrasfootState.currentMatches[0].leg === 1 ? 'FINAL - Jogo de Ida' : 'FINAL - Jogo de Volta') : 'Mata-Mata em Tempo Real') : `Rodada ${tournamentData.round} de ${tournamentData.maxRounds}`;
 
       // O jogo do próprio jogador aparece primeiro e destacado
       const myTeamId = teams[myPlayerId] ? teams[myPlayerId].id : null;
@@ -101,13 +101,14 @@
         const anyHuman = m.home.isHuman || m.away.isHuman;
         box.innerHTML = `
           ${mine ? '<div class="match-mine-tag">⭐ SEU JOGO</div>' : ''}
+          ${m.leg ? `<div class="leg-tag">🏆 Final — ${m.leg === 1 ? 'Jogo de Ida' : 'Jogo de Volta'}</div>` : ''}
           <div class="match-time">${currentBrasfootState.currentMatchMinute}' MIN</div>
           <div class="match-teams">
             <div class="team-display home">
               ${getTeamLogoHTML(m.home.name, m.home.badge)}
               <span>${m.home.name}</span>
             </div>
-            <div class="match-score">${m.homeScore} - ${m.awayScore}${m.penalties ? `<small class="pen-note">pên. ${m.penalties.home}-${m.penalties.away}</small>` : ''}</div>
+            <div class="match-score">${m.homeScore} - ${m.awayScore}${m.firstLeg ? `<small class="pen-note">agregado ${getAggregate(m).home}-${getAggregate(m).away}</small>` : ''}${m.penalties ? `<small class="pen-note">pên. ${m.penalties.home}-${m.penalties.away}</small>` : ''}</div>
             <div class="team-display away">
               <span>${m.away.name}</span>
               ${getTeamLogoHTML(m.away.name, m.away.badge)}
@@ -194,7 +195,8 @@
           tournamentData.bracket.matches.forEach(m => {
             const item = document.createElement('div');
             item.className = 'bracket-match-item';
-            const decided = m.homeScore !== m.awayScore || !!m.penWinner;
+            const agg = getAggregate(m);
+            const decided = m.leg === 1 ? false : (agg.home !== agg.away || !!m.penWinner);
             const homeWin = decided && matchHomeWon(m);
             const awayWin = decided && !homeWin;
             item.innerHTML = `
@@ -203,6 +205,7 @@
                 <span class="bracket-score">${m.homeScore} - ${m.awayScore}${m.penalties ? ` <small style="color:var(--accent-gold);">(${m.penalties.home}-${m.penalties.away} pen.)</small>` : ''}</span>
                 <span class="bracket-side away ${awayWin ? 'winner' : ''}"><span class="bracket-name">${m.away.name}</span> ${getTeamLogoHTML(m.away.name, m.away.badge)}</span>
               </div>
+              ${m.leg ? `<div style="text-align:center; font-size:0.7rem; color:var(--text-muted); margin-top:4px;">Final • ${m.leg === 1 ? 'Jogo de Ida' : `Volta • Ida: ${m.away.name} ${m.firstLeg.homeScore} x ${m.firstLeg.awayScore} ${m.home.name} • Agregado: ${agg.home} - ${agg.away}`}</div>` : ''}
             `;
             bracketDiv.appendChild(item);
           });
