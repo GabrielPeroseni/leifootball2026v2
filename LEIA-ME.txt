@@ -1,0 +1,33 @@
+FUTEBOL MANAGER & LEILAO 2026 - como usar
+
+1) Baixe o ZIP (futebol-manager.zip) e extraia tudo numa pasta.
+2) Abra o arquivo index.html no navegador (duplo clique).
+3) Mantenha as pastas css/ e js/ junto do index.html, com esta estrutura:
+
+futebol-manager/
+  index.html              (tela e botoes do jogo)
+  css/
+    style.css             (todo o visual)
+  js/
+    peer-fallback.js      (plano B se o modo online nao carregar)
+    data/
+      logos.js            (escudos dos times)
+      teams.js            (lista do Estadualzao e clubes grandes)
+      players.js          (banco de jogadores do leilao)
+    menu.js               (menu principal)
+    config-state.js       (configuracoes e variaveis do jogo)
+    setup-badges.js       (configuracao de times e escudos)
+    network.js            (modo online / sincronizacao)
+    auction.js            (leilao e trocas)
+    tournament-start.js   (inicio do torneio e forca dos times)
+    match-engine.js       (simulacao das partidas, gols, cartoes, taticas)
+    shootout-engine.js    (logica dos penaltis)
+    draw-engine.js        (sorteio das oitavas)
+    prizes.js             (premios da temporada)
+    ui-shootout.js        (animacao dos penaltis)
+    ui-draw.js            (animacao do sorteio)
+    tournament-flow.js    (fases, estatisticas, resultados)
+    ui-tournament.js      (tabelas, pódio e chaves)
+
+IMPORTANTE: a ordem dos <script> no index.html importa. Nao mude a ordem.
+Escudos e o modo online usam internet (links externos).

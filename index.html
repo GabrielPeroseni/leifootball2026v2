@@ -1,0 +1,477 @@
+ <!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>FUTEBOL MANAGER & LEILÃO 2026</title>
+  <!-- PeerJS (modo online): tenta jsDelivr, depois cdnjs, depois unpkg -->
+  <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.2/dist/peerjs.min.js"></script>
+  <script>window.Peer || document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.2/peerjs.min.js"><\/script>');</script>
+  <script src="js/peer-fallback.js"></script>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- MENU PRINCIPAL -->
+  <div id="main-menu-screen">
+    <div class="menu-header">
+      <h1 class="menu-title">⚽ FutManager 2026</h1>
+      <p class="menu-subtitle">Selecione o Modo de Jogo</p>
+    </div>
+
+    <div class="menu-cards-container">
+      <div class="mode-card" onclick="selectGameMode('leilao')">
+        <div class="mode-icon">🔨</div>
+        <div class="mode-title">Modo Leilão</div>
+        <div class="mode-desc">Monte seu elenco disputando lances em tempo real com outros jogadores e conquiste o campeonato!</div>
+      </div>
+
+      <div class="mode-card disabled" onclick="selectGameMode('estrelato')">
+        <span class="badge-coming-soon">Em Breve</span>
+        <div class="mode-icon">⭐</div>
+        <div class="mode-title">Rumo ao Estrelato</div>
+        <div class="mode-desc">Crie um único jogador, evolua seus atributos partida a partida e torne-se uma lenda do futebol mundial.</div>
+      </div>
+
+      <div class="mode-card disabled" onclick="selectGameMode('carreira')">
+        <span class="badge-coming-soon">Em Breve</span>
+        <div class="mode-icon">📋</div>
+        <div class="mode-title">Modo Carreira</div>
+        <div class="mode-desc">Assuma o controle total de um clube. Gerencie finanças, contratações, táticas e categorias de base.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TELA DE CONFIGURAÇÃO DO LEILÃO -->
+  <div id="setup-screen" class="screen" style="display: none;">
+    <div style="width: 100%; max-width: 1250px; display: flex; justify-content: space-between; align-items: center;">
+      <button class="btn-back" onclick="backToMainMenu()">← Menu Principal</button>
+      <h1 class="setup-title" style="margin-top: 0;">Leilão & Torneios 2026</h1>
+      <div style="width: 120px;"></div>
+    </div>
+    
+    <div class="setup-header-controls">
+      <div class="mode-tabs">
+        <button id="tab-host" class="tab-btn active" onclick="switchSetupTab('host')">Criar Sala (Host)</button>
+        <button id="tab-join" class="tab-btn" onclick="switchSetupTab('join')">Entrar na Sala</button>
+      </div>
+
+      <div id="host-controls" style="display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%;">
+        <div class="player-select-box">
+          <label for="num-players-select"><b>Quantidade de Jogadores:</b></label>
+          <select id="num-players-select" onchange="changePlayerCount(this.value)">
+            <option value="2">2 Jogadores</option>
+            <option value="3">3 Jogadores</option>
+            <option value="4">4 Jogadores</option>
+            <option value="5" selected>5 Jogadores</option>
+            <option value="6">6 Jogadores</option>
+            <option value="7">7 Jogadores</option>
+            <option value="8">8 Jogadores</option>
+          </select>
+        </div>
+        <div id="host-id-display" style="font-size: 0.85rem; color: #60a5fa; text-align: center;">Gerando ID da sala...</div>
+      </div>
+
+      <div id="join-controls" style="display: none; flex-direction: column; gap: 8px; width: 100%; max-width: 350px;">
+        <input type="text" id="join-room-id" placeholder="ID da Sala fornecido pelo Host">
+        <input type="text" id="join-team-name" placeholder="Nome do Seu Time">
+        <button class="btn-start" style="padding: 8px 15px; font-size: 0.85rem;" id="btn-join" onclick="joinRoom()">Entrar na Sala</button>
+      </div>
+
+      <div id="status-conn" style="font-size:0.8rem; color:var(--text-muted); text-align: center;"></div>
+    </div>
+
+    <div class="setup-grid" id="setup-teams-grid">
+      <div class="team-input-card" id="card-t0">
+        <label><b>Time 1 (Host)</b></label>
+        <div class="badge-preview" id="badge-prev-0"></div>
+        <input type="text" id="t0-name" value="Time 1" onchange="updateBadgePreviews()">
+        <label>Cor Principal</label>
+        <input type="color" id="t0-c1" value="#3b82f6" onchange="updateBadgePreviews()">
+        <label>Cor Secundária</label>
+        <input type="color" id="t0-c2" value="#0f172a" onchange="updateBadgePreviews()">
+        <label>Formato</label>
+        <select id="t0-shape" onchange="updateBadgePreviews()">
+          <option value="shield">Escudo Clássico</option>
+          <option value="circle">Circular</option>
+          <option value="diamond">Losango</option>
+        </select>
+        <label>Estilo / Padrão</label>
+        <select id="t0-pattern" onchange="updateBadgePreviews()">
+          <option value="solid">Liso / Sólido</option>
+          <option value="stripes">Listrado Vertical</option>
+          <option value="half">Meio a Meio</option>
+          <option value="stars">Com Estrela</option>
+        </select>
+        <label>Mascote</label>
+        <select id="t0-animal" onchange="updateBadgePreviews()">
+          <option value="🦅">Águia 🦅</option>
+          <option value="🦁">Leão 🦁</option>
+          <option value="🐅">Tigre 🐅</option>
+          <option value="🐺">Lobo 🐺</option>
+          <option value="🐉">Dragão 🐉</option>
+        </select>
+      </div>
+
+      <div class="team-input-card" id="card-t1">
+        <label><b>Time 2</b></label>
+        <div class="badge-preview" id="badge-prev-1"></div>
+        <input type="text" id="t1-name" value="Time 2" onchange="updateBadgePreviews()">
+        <label>Cor Principal</label>
+        <input type="color" id="t1-c1" value="#10b981" onchange="updateBadgePreviews()">
+        <label>Cor Secundária</label>
+        <input type="color" id="t1-c2" value="#ffffff" onchange="updateBadgePreviews()">
+        <label>Formato</label>
+        <select id="t1-shape" onchange="updateBadgePreviews()">
+          <option value="circle">Circular</option>
+          <option value="shield">Escudo Clássico</option>
+          <option value="diamond">Losango</option>
+        </select>
+        <label>Estilo / Padrão</label>
+        <select id="t1-pattern" onchange="updateBadgePreviews()">
+          <option value="solid">Liso / Sólido</option>
+          <option value="stripes">Listrado Vertical</option>
+          <option value="half">Meio a Meio</option>
+        </select>
+        <label>Mascote</label>
+        <select id="t1-animal" onchange="updateBadgePreviews()">
+          <option value="🟢">Porco 🟢</option>
+          <option value="🦅">Águia 🦅</option>
+          <option value="🦁">Leão 🦁</option>
+        </select>
+      </div>
+
+      <div class="team-input-card" id="card-t2">
+        <label><b>Time 3</b></label>
+        <div class="badge-preview" id="badge-prev-2"></div>
+        <input type="text" id="t2-name" value="Time 3" onchange="updateBadgePreviews()">
+        <label>Cor Principal</label>
+        <input type="color" id="t2-c1" value="#f59e0b" onchange="updateBadgePreviews()">
+        <label>Cor Secundária</label>
+        <input type="color" id="t2-c2" value="#000000" onchange="updateBadgePreviews()">
+        <label>Formato</label>
+        <select id="t2-shape" onchange="updateBadgePreviews()">
+          <option value="diamond">Losango</option>
+          <option value="shield">Escudo Clássico</option>
+        </select>
+        <label>Estilo / Padrão</label>
+        <select id="t2-pattern" onchange="updateBadgePreviews()">
+          <option value="half">Meio a Meio</option>
+          <option value="solid">Liso / Sólido</option>
+        </select>
+        <label>Mascote</label>
+        <select id="t2-animal" onchange="updateBadgePreviews()">
+          <option value="🦁">Leão 🦁</option>
+          <option value="🦅">Águia 🦅</option>
+        </select>
+      </div>
+
+      <div class="team-input-card" id="card-t3">
+        <label><b>Time 4</b></label>
+        <div class="badge-preview" id="badge-prev-3"></div>
+        <input type="text" id="t3-name" value="Time 4" onchange="updateBadgePreviews()">
+        <label>Cor Principal</label>
+        <input type="color" id="t3-c1" value="#8b5cf6" onchange="updateBadgePreviews()">
+        <label>Cor Secundária</label>
+        <input type="color" id="t3-c2" value="#ffffff" onchange="updateBadgePreviews()">
+        <label>Formato</label>
+        <select id="t3-shape" onchange="updateBadgePreviews()">
+          <option value="shield">Escudo Clássico</option>
+        </select>
+        <label>Estilo / Padrão</label>
+        <select id="t3-pattern" onchange="updateBadgePreviews()">
+          <option value="stripes">Listrado Vertical</option>
+        </select>
+        <label>Mascote</label>
+        <select id="t3-animal" onchange="updateBadgePreviews()">
+          <option value="🦅">Gavião 🦅</option>
+        </select>
+      </div>
+
+      <div class="team-input-card" id="card-t4">
+        <label><b>Time 5</b></label>
+        <div class="badge-preview" id="badge-prev-4"></div>
+        <input type="text" id="t4-name" value="Time 5" onchange="updateBadgePreviews()">
+        <label>Cor Principal</label>
+        <input type="color" id="t4-c1" value="#06b6d4" onchange="updateBadgePreviews()">
+        <label>Cor Secundária</label>
+        <input type="color" id="t4-c2" value="#ffffff" onchange="updateBadgePreviews()">
+        <label>Formato</label>
+        <select id="t4-shape" onchange="updateBadgePreviews()">
+          <option value="circle">Circular</option>
+        </select>
+        <label>Estilo / Padrão</label>
+        <select id="t4-pattern" onchange="updateBadgePreviews()">
+          <option value="stars">Com Estrela</option>
+        </select>
+        <label>Mascote</label>
+        <select id="t4-animal" onchange="updateBadgePreviews()">
+          <option value="🐉">Dragão 🐉</option>
+        </select>
+      </div>
+
+      <div class="team-input-card" id="card-t5" style="display: none;">
+        <label><b>Time 6</b></label>
+        <div class="badge-preview" id="badge-prev-5"></div>
+        <input type="text" id="t5-name" value="Time 6" onchange="updateBadgePreviews()">
+        <label>Cor Principal</label>
+        <input type="color" id="t5-c1" value="#ec4899" onchange="updateBadgePreviews()">
+        <label>Cor Secundária</label>
+        <input type="color" id="t5-c2" value="#ffffff" onchange="updateBadgePreviews()">
+        <label>Formato</label>
+        <select id="t5-shape" onchange="updateBadgePreviews()">
+          <option value="shield">Escudo Clássico</option>
+        </select>
+        <label>Estilo / Padrão</label>
+        <select id="t5-pattern" onchange="updateBadgePreviews()">
+          <option value="solid">Liso / Sólido</option>
+        </select>
+        <label>Mascote</label>
+        <select id="t5-animal" onchange="updateBadgePreviews()">
+          <option value="🐺">Lobo 🐺</option>
+        </select>
+      </div>
+
+      <div class="team-input-card" id="card-t6" style="display: none;">
+        <label><b>Time 7</b></label>
+        <div class="badge-preview" id="badge-prev-6"></div>
+        <input type="text" id="t6-name" value="Time 7" onchange="updateBadgePreviews()">
+        <label>Cor Principal</label>
+        <input type="color" id="t6-c1" value="#e11d48" onchange="updateBadgePreviews()">
+        <label>Cor Secundária</label>
+        <input type="color" id="t6-c2" value="#000000" onchange="updateBadgePreviews()">
+        <label>Formato</label>
+        <select id="t6-shape" onchange="updateBadgePreviews()">
+          <option value="diamond">Losango</option>
+        </select>
+        <label>Estilo / Padrão</label>
+        <select id="t6-pattern" onchange="updateBadgePreviews()">
+          <option value="stripes">Listrado Vertical</option>
+        </select>
+        <label>Mascote</label>
+        <select id="t6-animal" onchange="updateBadgePreviews()">
+          <option value="🐅">Tigre 🐅</option>
+        </select>
+      </div>
+
+      <div class="team-input-card" id="card-t7" style="display: none;">
+        <label><b>Time 8</b></label>
+        <div class="badge-preview" id="badge-prev-7"></div>
+        <input type="text" id="t7-name" value="Time 8" onchange="updateBadgePreviews()">
+        <label>Cor Principal</label>
+        <input type="color" id="t7-c1" value="#84cc16" onchange="updateBadgePreviews()">
+        <label>Cor Secundária</label>
+        <input type="color" id="t7-c2" value="#0f172a" onchange="updateBadgePreviews()">
+        <label>Formato</label>
+        <select id="t7-shape" onchange="updateBadgePreviews()">
+          <option value="circle">Circular</option>
+        </select>
+        <label>Estilo / Padrão</label>
+        <select id="t7-pattern" onchange="updateBadgePreviews()">
+          <option value="half">Meio a Meio</option>
+        </select>
+        <label>Mascote</label>
+        <select id="t7-animal" onchange="updateBadgePreviews()">
+          <option value="🦁">Leão 🦁</option>
+        </select>
+      </div>
+    </div>
+
+    <button class="btn-start" id="btn-host-start" onclick="startGame()">Iniciar Leilão (Host)</button>
+  </div>
+
+  <!-- GAME ARENA (LEILÃO) -->
+  <div id="game-arena" style="display: none;">
+    <div class="teams-left-sidebar" id="teams-sidebar">
+      <div class="team-panel" id="panel-0"></div>
+      <div class="team-panel" id="panel-1"></div>
+      <div class="team-panel" id="panel-2"></div>
+      <div class="team-panel" id="panel-3"></div>
+      <div class="team-panel" id="panel-4"></div>
+      <div class="team-panel" id="panel-5" style="display: none;"></div>
+      <div class="team-panel" id="panel-6" style="display: none;"></div>
+      <div class="team-panel" id="panel-7" style="display: none;"></div>
+    </div>
+    
+    <div id="auction-right-center">
+      <div style="width: 100%; max-width: 400px; text-align: center;">
+        <span id="season-badge" style="background:var(--accent-slate); color:#fff; font-weight:600; padding:4px 12px; border-radius:4px; font-size:0.75rem; text-transform:uppercase;">1ª Temporada: Leilão Principal</span>
+        <button class="btn-action btn-dice" id="btn-roll-dice" style="margin-top:10px;" onclick="rollDice()">Sortear Ordem (Rolar Dado)</button>
+        <p id="dice-result" style="text-align: center; margin-top: 6px; font-weight: 600; color: #60a5fa; font-size:0.85rem;"></p>
+      </div>
+
+      <div class="player-card">
+        <div class="card-ovr" id="c-ovr">--</div>
+        <div class="card-pos" id="c-pos">POS</div>
+        <div class="card-photo-box">
+          <img id="c-photo" class="card-photo-img" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text x='50%' y='55%' font-size='50' text-anchor='middle' dominant-baseline='central' fill='%23fff'>👤</text></svg>" alt="Foto">
+        </div>
+        <div class="card-name" id="c-name">Aguardando...</div>
+      </div>
+
+      <div class="bidding-info">
+        <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Lance Atual</div>
+        <div class="current-bid" id="current-bid-val">0 Tokens</div>
+        <div id="highest-bidder-name" style="font-size: 0.85rem; color: var(--text-muted);">Nenhum lance</div>
+      </div>
+
+      <div class="controls-panel">
+        <p id="turn-indicator" style="text-align:center; font-weight:600; font-size: 0.85rem; color: var(--text-main);">Aguardando dado...</p>
+        <div class="btn-group">
+          <button class="btn-action btn-pass" id="btn-pass" onclick="handlePass()" disabled>Recusar (<span id="my-passes-count">4</span>x)</button>
+          <button class="btn-action btn-zero" id="btn-bid-0" onclick="handleBid(0)" disabled>Lance 0 Tokens</button>
+          <button class="btn-action btn-bid" id="btn-bid-1" onclick="handleBid(1)" disabled>+1 Token</button>
+          <button class="btn-action btn-bid" id="btn-bid-2" onclick="handleBid(2)" disabled>+2 Tokens</button>
+          <button class="btn-action btn-bid" id="btn-bid-3" onclick="handleBid(3)" disabled>+3 Tokens</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TELA DE CAMPEONATO -->
+  <div id="league-screen" class="screen" style="display: none;">
+    <div class="brasfoot-header">
+      <h2 style="color:var(--text-main); font-size: 1.2rem; text-transform: uppercase; letter-spacing: 1px;" id="phase-indicator">🏆 ESTADUALZÃO</h2>
+      <p id="round-indicator" style="color:var(--text-muted); font-size:0.85rem; margin-top:2px;">Simulação de Partidas</p>
+    </div>
+
+    <!-- PAINEL TÁTICO: aparece só para quem controla um time que está jogando -->
+    <div id="tactics-panel">
+      <div class="tp-top">
+        <div class="tp-match" id="tp-match"></div>
+        <div class="tp-cards" id="tp-cards"></div>
+      </div>
+      <div class="tp-buttons">
+        <button class="tp-btn" id="tp-DEF" onclick="setTactic('DEF')">🛡️ Defensivo</button>
+        <button class="tp-btn" id="tp-BAL" onclick="setTactic('BAL')">⚖️ Equilibrado</button>
+        <button class="tp-btn" id="tp-OFF" onclick="setTactic('OFF')">⚔️ Ofensivo</button>
+      </div>
+      <div class="tp-desc" id="tp-desc"></div>
+    </div>
+
+    <div class="brasfoot-grid">
+      <div class="matches-broadcast">
+        <div id="matches-broadcast-container" style="width:100%; display:flex; flex-direction:column; align-items:center;"></div>
+      </div>
+
+      <div class="league-table-container">
+        <div class="top-scorers-box" id="top-scorers-container">
+          <div class="top-scorers-title">⚽ Artilharia do Campeonato</div>
+          <div id="top-scorers-list"><div style="font-size:0.75rem; color:var(--text-muted);">Nenhum gol marcado ainda.</div></div>
+        </div>
+        <h3 style="color:var(--text-main); text-align:center; margin-bottom:6px; font-size:0.95rem; text-transform:uppercase;" id="side-panel-title">Tabelas / Classificação</h3>
+        <div class="group-tables-grid" id="groups-container"></div>
+        <div class="bracket-list" id="bracket-list-container" style="display:none;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DISPUTA DE PÊNALTIS (sobrepõe a tela inteira) -->
+  <div id="shootout-overlay">
+    <div class="so-wrap">
+      <div class="so-stage" id="so-stage">⚽ Disputa de Pênaltis</div>
+      <div class="so-sub" id="so-sub"></div>
+      <div class="so-scoreboard">
+        <div class="so-team" id="so-home"></div>
+        <div class="so-score" id="so-score">0 - 0</div>
+        <div class="so-team away" id="so-away"></div>
+      </div>
+      <div class="so-scene" id="so-scene">
+        <div class="so-goal"></div>
+        <div class="so-line"></div>
+        <div class="so-keeper" id="so-keeper"></div>
+        <div class="so-spot"></div>
+        <div class="so-ball" id="so-ball">⚽</div>
+        <div class="so-flash" id="so-flash"></div>
+        <div class="so-zones" id="so-zones">
+          <button class="so-zone" id="so-zone-L-T" onclick="soChoose('L','T')">↖</button>
+          <button class="so-zone" id="so-zone-C-T" onclick="soChoose('C','T')">↑</button>
+          <button class="so-zone" id="so-zone-R-T" onclick="soChoose('R','T')">↗</button>
+          <button class="so-zone" id="so-zone-L-B" onclick="soChoose('L','B')">↙</button>
+          <button class="so-zone" id="so-zone-C-B" onclick="soChoose('C','B')">↓</button>
+          <button class="so-zone" id="so-zone-R-B" onclick="soChoose('R','B')">↘</button>
+        </div>
+      </div>
+      <div class="so-prompt" id="so-prompt"></div>
+      <div class="so-timerbar" id="so-timerbar"><div class="so-timerfill" id="so-timerfill"></div></div>
+      <div class="so-kicker" id="so-kicker"></div>
+      <div class="so-rows">
+        <div class="so-row"><div class="so-row-name" id="so-row-home-name"></div><div class="so-slots" id="so-slots-home"></div></div>
+        <div class="so-row"><div class="so-row-name" id="so-row-away-name"></div><div class="so-slots" id="so-slots-away"></div></div>
+      </div>
+      <div class="so-banner" id="so-banner"></div>
+    </div>
+  </div>
+
+  <!-- SORTEIO DAS OITAVAS DE FINAL (bolas e papéis) -->
+  <div id="draw-overlay">
+    <div class="dr-wrap">
+      <div class="dr-title">🎱 Sorteio das Oitavas de Final</div>
+      <div class="dr-sub" id="dr-sub"></div>
+      <div class="dr-stage" id="dr-stage">
+        <div class="dr-bowl" id="dr-bowl"></div>
+        <div class="dr-ball" id="dr-ball"><div class="dr-ball-in" id="dr-ball-in"><div class="h1"></div><div class="h2"></div></div></div>
+        <div class="dr-paper" id="dr-paper"></div>
+      </div>
+      <div class="dr-status" id="dr-status"></div>
+      <div class="dr-bracket" id="dr-bracket"></div>
+      <div class="dr-banner" id="dr-banner"></div>
+    </div>
+  </div>
+
+  <!-- PÓDIO DA COMPETIÇÃO -->
+  <div id="podium-screen" class="screen" style="display: none;">
+    <h1 style="color: var(--text-main); margin-bottom: 5px; font-size: 1.6rem; text-align:center; text-transform: uppercase;" id="podium-title">👑 GRANDES CAMPEÕES 👑</h1>
+    <p id="podium-subtitle" style="color:#60a5fa; margin-bottom:20px; font-weight:600; text-align:center; font-size:0.9rem;">Competição Encerrada!</p>
+    <div class="podium-container">
+      <div class="podium-step podium-2" id="step-2">
+        <div id="podium-badge-2" style="width:35px; height:35px;"></div>
+        <div style="font-size:0.8rem; margin-top:4px;">🥈 Vice</div>
+        <div class="podium-team-name" id="podium-name-2">--</div>
+      </div>
+      <div class="podium-step podium-1" id="step-1">
+        <div class="trophy">🏆</div>
+        <div id="podium-badge-1" style="width:45px; height:45px;"></div>
+        <div style="font-size:0.85rem; margin-top:4px;">1º CAMPEÃO</div>
+        <div class="podium-team-name" id="podium-name-1">--</div>
+      </div>
+      <div class="podium-step podium-3" id="step-3">
+        <div id="podium-badge-3" style="width:30px; height:30px;"></div>
+        <div style="font-size:0.75rem; margin-top:4px;">🥉 3º LUGAR</div>
+        <div class="podium-team-name" id="podium-name-3">--</div>
+      </div>
+    </div>
+    <div id="podium-prizes" class="podium-prizes"></div>
+    <div id="season-stats-box" class="season-stats-box"></div>
+    <button class="btn-start" id="btn-next-phase" style="margin-top:25px;" onclick="handlePodiumNextPhase()">Avançar para a próxima fase</button>
+  </div>
+
+  <!-- MODAL DE TROCA DE JOGADOR (TEMPORADAS DE REFORÇO) -->
+  <div id="swap-modal-overlay">
+    <div class="swap-modal">
+      <div class="swap-modal-title" id="swap-modal-title">Substituir Jogador</div>
+      <p style="font-size:0.8rem; color:var(--text-muted); text-align:center;" id="swap-modal-subtitle">Escolha qual jogador do seu elenco sairá para a entrada do reforço:</p>
+      <div class="swap-list" id="swap-modal-list"></div>
+    </div>
+  </div>
+
+  <!-- Scripts do jogo: a ORDEM importa, não altere -->
+  <script src="js/data/logos.js"></script>
+  <script src="js/data/teams.js"></script>
+  <script src="js/menu.js"></script>
+  <script src="js/data/players.js"></script>
+  <script src="js/config-state.js"></script>
+  <script src="js/setup-badges.js"></script>
+  <script src="js/network.js"></script>
+  <script src="js/auction.js"></script>
+  <script src="js/tournament-start.js"></script>
+  <script src="js/match-engine.js"></script>
+  <script src="js/shootout-engine.js"></script>
+  <script src="js/draw-engine.js"></script>
+  <script src="js/prizes.js"></script>
+  <script src="js/ui-shootout.js"></script>
+  <script src="js/ui-draw.js"></script>
+  <script src="js/tournament-flow.js"></script>
+  <script src="js/ui-tournament.js"></script>
+</body>
+</html>
