@@ -71,7 +71,8 @@
     let pendingSwap = null;      
     let swapModalKey = null;     
     let matchTimer = null;       
-    const MATCH_DURATION_MS = 60000;
+    const MATCH_DURATION_MS = 60000;        // mata-mata: 1 minuto por partida
+    const GROUP_MATCH_DURATION_MS = 30000;  // fases de grupos (de 8 e de 4 times): 30 segundos por partida
     const HUMAN_TEAM_BONUS = 3;   // leve vantagem para os times dos jogadores (elencos montados no leilão)
     const BIG_TEAM_BONUS = 3;     // vantagem dos clubes grandes sobre os pequenos
     const SCORER_WEIGHTS = { ATA: 10, MC: 4, DEF: 0.25 }; // chance relativa de cada posição fazer gol (zagueiro bem raro) 
