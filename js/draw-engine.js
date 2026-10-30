@@ -1,5 +1,5 @@
     // Host: sorteio das oitavas — uma bola por vez, 5 segundos por time, montando a chave
-    function runOitavasDraw(winners, done) {
+    function runOitavasDraw(winners, done, label) {
       if (drawTimer) { clearTimeout(drawTimer); drawTimer = null; }
       const order = winners.slice();
       for (let i = order.length - 1; i > 0; i--) {          // embaralha (Fisher-Yates)
@@ -10,6 +10,7 @@
         active: true,
         id: 'dr_' + Date.now() + '_' + Math.floor(Math.random() * 1e6),
         total: order.length,
+        label: label || null,
         teams: [],
         finished: false
       };

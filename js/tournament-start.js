@@ -118,7 +118,7 @@
       if (matchTimer) { clearInterval(matchTimer); matchTimer = null; }
 
       const startTime = Date.now();
-      const baseDurationMs = (tournamentStage === 'ESTADUALZAO_PHASE1' || tournamentStage === 'ESTADUALZAO_PHASE2') ? GROUP_MATCH_DURATION_MS : MATCH_DURATION_MS;
+      const baseDurationMs = isCompStage() ? compBaseDuration() : ((tournamentStage === 'ESTADUALZAO_PHASE1' || tournamentStage === 'ESTADUALZAO_PHASE2') ? GROUP_MATCH_DURATION_MS : MATCH_DURATION_MS);
       const matchDurationMs = allHumansEliminated() ? baseDurationMs / 2 : baseDurationMs;
 
       matchTimer = setInterval(() => {

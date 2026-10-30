@@ -104,6 +104,9 @@
       else if (action === 'PASS') handlePassLogic(senderId);
       else if (action === 'SET_TACTIC') setTacticLogic(payload.tactic, senderId);
       else if (action === 'SO_CHOICE') soSubmitChoice(senderId, payload);
+      else if (action === 'NEXT_COMP') {
+        if (compSummary && payload && compSummary.id === payload.id) advanceCalendar();
+      }
       else if (action === 'NEXT_SEASON') {
         const podiumOpen = document.getElementById('podium-screen').style.display !== 'none';
         if (currentSeason < MAX_SEASONS && podiumOpen) startNextSeasonAuction();
@@ -133,6 +136,10 @@
         pendingSwap: pendingSwap,
         topScorers: topScorers,
         teamStats: teamStats,
+        teamTitles: teamTitles,
+        seasonPrizes: seasonPrizes,
+        seasonLog: seasonLog,
+        compSummary: compSummary,
         playoffResults: playoffResults,
         diceResultText: document.getElementById('dice-result').innerText,
         setupHidden: document.getElementById('setup-screen').style.display === 'none',
@@ -174,6 +181,10 @@
       if (state.tournamentData) tournamentData = state.tournamentData;
       if (state.topScorers) topScorers = state.topScorers;
       if (state.teamStats) teamStats = state.teamStats;
+      teamTitles = state.teamTitles || {};
+      seasonPrizes = state.seasonPrizes || [];
+      seasonLog = state.seasonLog || [];
+      compSummary = state.compSummary || null;
       if (state.playoffResults) playoffResults = state.playoffResults;
 
       for (let i = 0; i < playerCount; i++) {
@@ -212,6 +223,7 @@
       renderShootoutOverlay();
       drawState = state.draw || null;
       renderDrawOverlay();
+      renderCompSummary();
 
       renderTeamPanels();
       updateTurnUI();

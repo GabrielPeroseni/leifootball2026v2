@@ -742,3 +742,25 @@
       .card-photo-box { width: 140px; height: 140px; }
       .menu-title { font-size: 2rem; }
     }
+
+    /* ===== CAMPEONATOS DA TEMPORADA ===== */
+    .group-legend { font-size: 0.68rem; color: var(--text-muted); text-align: center; margin: 0 0 6px; line-height: 1.3; }
+    .group-card tr.z-up td:first-child { box-shadow: inset 3px 0 0 #22c55e; }
+    .group-card tr.z-mid td:first-child { box-shadow: inset 3px 0 0 #3b82f6; }
+    .group-card tr.z-down td:first-child { box-shadow: inset 3px 0 0 #ef4444; }
+    .cs-body { width: 100%; max-width: 640px; display: flex; flex-direction: column; gap: 12px; }
+    .cs-section { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 12px; }
+    .cs-section-title { color: #60a5fa; font-weight: 700; font-size: 0.8rem; text-transform: uppercase; margin-bottom: 6px; }
+    .cs-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 5px 4px; border-bottom: 1px solid var(--border-color); font-size: 0.85rem; }
+    .cs-row:last-child { border-bottom: none; }
+    .cs-row.human { background: rgba(16, 185, 129, 0.12); border-radius: 4px; }
+    .cs-label { color: var(--text-muted); font-size: 0.78rem; white-space: nowrap; }
+    .cs-team { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; text-align: right; }
+    .cs-badge { display: inline-block; width: 22px; height: 22px; }
+    .cs-note { font-size: 0.72rem; color: var(--text-muted); text-align: center; margin-top: 6px; }
+    .prize-comp { color: #60a5fa; font-weight: 700; font-size: 0.78rem; text-transform: uppercase; margin: 8px 0 2px; }
+    .log-row { display: flex; justify-content: space-between; gap: 10px; padding: 5px 4px; border-bottom: 1px solid var(--border-color); font-size: 0.85rem; }
+    .log-comp { color: var(--text-muted); }
+    .log-champ { font-weight: 700; text-align: right; }
+    .log-champ small { color: var(--text-muted); font-weight: 400; }
+    .season-stats-table td.titles-cell { color: var(--accent-gold); font-weight: 700; }

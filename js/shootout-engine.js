@@ -129,7 +129,7 @@
       shootoutState = {
         active: true,
         id: 'so_' + Date.now() + '_' + Math.floor(Math.random() * 1e6),
-        stageLabel: shootoutStageLabel(currentBrasfootState.currentMatches.length),
+        stageLabel: m.stageName || shootoutStageLabel(currentBrasfootState.currentMatches.length),
         regularScore: m.firstLeg ? `${getAggregate(m).home} x ${getAggregate(m).away} (agregado)` : `${m.homeScore} x ${m.awayScore}`,
         home: { name: m.home.name, badge: m.home.badge },
         away: { name: m.away.name, badge: m.away.badge },

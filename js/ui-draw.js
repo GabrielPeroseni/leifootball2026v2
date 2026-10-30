@@ -26,6 +26,7 @@
       if (L.id !== st.id) {   // novo sorteio
         L.timers.forEach(clearTimeout);
         L.timers = []; L.id = st.id; L.handled = 0; L.placed = 0;
+        soEl('dr-title').textContent = st.label ? `🎱 Sorteio — ${st.label}` : '🎱 Sorteio das Oitavas de Final';
         soEl('dr-sub').textContent = `${st.total} classificados • uma bola por vez • os confrontos saem na ordem do sorteio`;
         soEl('dr-status').textContent = 'O sorteio vai começar...';
         soEl('dr-banner').className = 'dr-banner';
@@ -131,7 +132,7 @@
       const banner = soEl('dr-banner');
       if (st.finished && L.placed >= st.teams.length) {
         soEl('dr-status').textContent = 'Chave completa!';
-        banner.textContent = '✅ Chave das oitavas definida! Que comecem os jogos!';
+        banner.textContent = st.label ? `✅ Chave definida (${st.label})! Que comecem os jogos!` : '✅ Chave das oitavas definida! Que comecem os jogos!';
         banner.className = 'dr-banner show';
       }
     }

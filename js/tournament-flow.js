@@ -1,5 +1,6 @@
     function finishCurrentBatch() {
       if (!isHost) return;
+      if (isCompStage()) { compBatchDone(); return; }
 
       if (tournamentStage === 'ESTADUALZAO_PHASE1') {
         currentBrasfootState.currentMatches.forEach(m => {

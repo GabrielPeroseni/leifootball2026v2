@@ -110,3 +110,20 @@
     let drawState = null;             // estado do sorteio das oitavas (sincronizado)
     let drawTimer = null;
     const drawLocal = { id: null, handled: 0, placed: 0, timers: [] };
+
+    /* ===== CALENDÁRIO DA TEMPORADA (Estadual, Nacionalzão, Continentais e Estadualzão) ===== */
+    const NACIONAL_MATCH_DURATION_MS = 30000;   // Série A/B: duração de cada rodada (38 rodadas por temporada)
+    const COMP_PRIZES = {                        // prêmios por campeonato (só times de jogadores reais; se acumulam)
+      ESTADUAL: { 1: { tokens: 30, swaps: 0, passes: 1 }, 2: { tokens: 15, swaps: 0, passes: 0 }, 3: { tokens: 5, swaps: 0, passes: 0 } },
+      SERIE_A:  { 1: { tokens: 50, swaps: 1, passes: 1 }, 2: { tokens: 30, swaps: 0, passes: 0 }, 3: { tokens: 20, swaps: 0, passes: 0 }, 4: { tokens: 10, swaps: 0, passes: 0 } },
+      SERIE_B:  { 1: { tokens: 20, swaps: 0, passes: 0 }, 2: { tokens: 10, swaps: 0, passes: 0 }, 3: { tokens: 5, swaps: 0, passes: 0 } },
+      CONT_A:   { 1: { tokens: 50, swaps: 1, passes: 2 }, 2: { tokens: 30, swaps: 1, passes: 0 }, 3: { tokens: 15, swaps: 0, passes: 0 } },
+      CONT_B:   { 1: { tokens: 30, swaps: 1, passes: 1 }, 2: { tokens: 15, swaps: 0, passes: 0 }, 3: { tokens: 5, swaps: 0, passes: 0 } }
+    };
+    let teamTitles = {};      // títulos acumulados dos times dos jogadores: { id: { total, list: [] } } (sincronizado)
+    let seasonPrizes = [];    // prêmios da temporada, de todos os campeonatos (sincronizado)
+    let seasonLog = [];       // campeões de cada campeonato da temporada (sincronizado)
+    let compSummary = null;   // resumo exibido entre os campeonatos (sincronizado)
+    let seasonCalendar = null;  // host: ordem dos campeonatos da temporada
+    let worldState = null;      // host: clubes do mundo, forças e divisões (Série A/B)
+    let compCtl = null;         // host: controle do campeonato em andamento

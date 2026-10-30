@@ -8,6 +8,13 @@
       usedPlayerNames.clear();
       topScorers = {};
       teamStats = {};
+      teamTitles = {};
+      seasonPrizes = [];
+      seasonLog = [];
+      compSummary = null;
+      seasonCalendar = null;
+      worldState = null;
+      compCtl = null;
       playoffResults = { champion: null, runnerUp: null, semifinalists: [] };
       stopShootout();
       updateBadgePreviews();
@@ -40,6 +47,11 @@
       pendingSwap = null;
       tournamentStage = 'LIGA';
       playoffResults = { champion: null, runnerUp: null, semifinalists: [] };
+      seasonPrizes = [];
+      seasonLog = [];
+      compSummary = null;
+      seasonCalendar = null;
+      compCtl = null;
       
       teams.forEach(t => {
         t.tokens += 100;
@@ -51,6 +63,7 @@
 
       document.getElementById('league-screen').style.display = 'none';
       document.getElementById('podium-screen').style.display = 'none';
+      document.getElementById('comp-summary-screen').style.display = 'none';
       document.getElementById('game-arena').style.display = 'grid';
 
       buildDeck();
@@ -67,7 +80,7 @@
           if (!isTeamFull(i)) { allDone = false; break; }
         }
         if (allDone) {
-          startEstadualzaoPhase1();
+          startSeasonCalendar();
           return;
         }
       } else {
@@ -75,7 +88,7 @@
           if (teams[i].season2SwapsLeft > 0) { allDone = false; break; }
         }
         if (allDone) {
-          startEstadualzaoPhase1();
+          startSeasonCalendar();
           return;
         }
       }

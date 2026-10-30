@@ -75,6 +75,7 @@
 
     function allHumansEliminated() {
       if (!playerCount) return false;
+      if (isCompStage()) return compAllHumansEliminated();
       for (let i = 0; i < playerCount; i++) {
         if (!isHumanEliminated(teams[i].id)) return false;
       }
