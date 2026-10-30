@@ -34,10 +34,12 @@ futebol-manager/
     competitions.js          (NOVO: calendario da temporada e regras de cada campeonato)
     ui-comp.js               (NOVO: tela de resumo entre campeonatos e campeoes da temporada)
 
-CLUBES: todos vem da mesma lista do Estadualzao (125 clubes, qualquer nacionalidade). A cada temporada
-os clubes sao sorteados SEM REPETIR entre Estadual, Nacionalzao (Serie A + B) e Continentais.
-(Os 10 primeiros da Serie A vao aos Continentais porque se classificaram, e a Serie A/B se mantem
-entre temporadas com subida e descida.) Continental A e B recebem os clubes mais fortes que sobraram.
+CLUBES: todos vem da mesma lista do Estadualzao (125 clubes, qualquer nacionalidade).
+- Serie A = os clubes MAIS FORTES; Serie B = os MAIS FRACOS (reavaliado a cada temporada).
+  Os times dos jogadores sobem/descem normalmente e ocupam vagas.
+- Continental A = os 32 mais fortes (5 vindos da Serie A + os mais fortes do mundo, MESMO que ja estejam na Serie A).
+- Continental B = 5 vindos da Serie A + os proximos mais fortes que sobraram do Continental A.
+- Estadual = clubes de nivel medio.
 
 CALENDARIO DE CADA TEMPORADA (a proxima temporada so comeca quando TODOS terminam)
   1. Estadual     - 16 clubes (todos os jogadores + clubes sorteados), fase unica estilo
@@ -45,13 +47,15 @@ CALENDARIO DE CADA TEMPORADA (a proxima temporada so comeca quando TODOS termina
                     Os 2 ultimos sao rebaixados para a Serie A2.
   2. Nacionalzao  - Serie A e Serie B, 20 clubes cada, pontos corridos (38 rodadas).
                     Serie A: 1o-5o -> Continental A | 6o-10o -> Continental B | 4 ultimos caem.
-                    Serie B: 4 primeiros sobem. So e mostrado ao vivo se houver jogador na serie.
+                    Serie B: 4 primeiros sobem. Se houver jogadores nas DUAS series, as duas passam ao vivo ao mesmo tempo.
   3. Continental A - 32 clubes mais fortes, 8 grupos de 4 (ida e volta). 1o e 2o vao ao mata-mata
                     (oitavas, quartas e semi em ida e volta; final em jogo unico). 3o vai ao Continental B.
   4. Continental B - 32 clubes, 8 grupos de 4. 1o vai as oitavas; 2o enfrenta o 3o do Continental A
                     (playoff ida e volta). Depois mata-mata igual ao Continental A.
   5. Estadualzao  - o campeonato que ja existia (128 times), final em ida e volta.
 
+  Continentais: se houver jogador em qualquer grupo, os 8 grupos passam ao vivo juntos; se houver jogadores nos
+  dois continentais, as fases de grupos do A e do B passam ao vivo ao mesmo tempo (16 grupos).
   Campeonatos sem nenhum jogador sao simulados na hora (sem tela). Premios e titulos se acumulam.
 
 AJUSTES RAPIDOS
