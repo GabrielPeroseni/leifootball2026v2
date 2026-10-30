@@ -1,23 +1,12 @@
-    // ===== MUNDO DO JOGO: clubes dos campeonatos da temporada =====
-    // Clubes brasileiros que já existem na lista principal (usados no Estadual e no Nacionalzão)
-    const BR_CLUBS_BASE = [
-      "Flamengo", "Corinthians", "Palmeiras", "Atlético Mineiro", "São Paulo", "Fluminense", "Botafogo", "Vasco da Gama",
-      "Cruzeiro", "Grêmio", "Internacional", "Santos", "Athletico Paranaense", "Bahia", "Sport"
-    ];
+    // ===== MUNDO DO JOGO: força dos clubes e escudos =====
+    // Todos os clubes dos campeonatos da temporada vêm da MESMA lista do Estadualzão (RAW_ESTADUALZAO_LIST).
+    // Nenhum clube novo é criado: eles apenas são sorteados entre os campeonatos, sem repetir.
 
-    // Clubes brasileiros extras para completar a Série A e a Série B (sem escudo oficial: recebem um escudo gerado)
-    const BR_CLUBS_EXTRA = [
-      "Fortaleza", "Ceará", "Goiás", "Coritiba", "Vitória", "Red Bull Bragantino", "Cuiabá", "América-MG",
-      "Juventude", "Criciúma", "Avaí", "Chapecoense", "Ponte Preta", "Guarani", "Santa Cruz", "Náutico",
-      "CRB", "CSA", "Mirassol", "Novorizontino", "Vila Nova", "Operário-PR", "Paysandu", "Remo",
-      "Londrina", "Figueirense", "Brusque", "Ituano", "Sampaio Corrêa", "Confiança", "ABC", "Tombense"
-    ];
-
-    // Clubes de nível intermediário (um pouco acima dos demais, abaixo dos grandes)
+    // Clubes de nível intermediário (um pouco acima dos demais, abaixo dos grandes de BIG_TEAMS)
     const MID_TIER_CLUBS = new Set([
-      "Athletico Paranaense", "Bahia", "Sport", "Fortaleza", "Ceará", "Goiás", "Coritiba", "Vitória", "Red Bull Bragantino",
-      "Racing Club", "Estudiantes de La Plata", "Independiente", "Olimpia", "Atlético Nacional", "Tottenham Hotspur",
-      "AS Roma", "Napoli", "Borussia Dortmund", "AFC Ajax", "SL Benfica", "FC Porto", "Sporting CP", "PSV Eindhoven", "Bayer Leverkusen"
+      "Athletico Paranaense", "Bahia", "Sport", "Racing Club", "Estudiantes de La Plata", "Independiente", "Olimpia",
+      "Atlético Nacional", "Tottenham Hotspur", "AS Roma", "Napoli", "Borussia Dortmund", "AFC Ajax", "SL Benfica",
+      "FC Porto", "Sporting CP", "PSV Eindhoven", "Bayer Leverkusen"
     ]);
 
     const BADGE_COLORS = [
@@ -26,7 +15,7 @@
       ['#be123c', '#fde68a'], ['#065f46', '#fde68a'], ['#1e3a8a', '#fbbf24'], ['#f3f4f6', '#111827']
     ];
 
-    // Escudo gerado e fixo para cada clube sem logo (sempre o mesmo para o mesmo nome)
+    // Escudo reserva (só aparece se algum clube ficar sem logo): sempre o mesmo para o mesmo nome
     function badgeForClub(name) {
       let h = 0;
       for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;

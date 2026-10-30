@@ -13,27 +13,47 @@
       return 64 + rndInt(11);
     }
 
-    // Cria (uma vez por jogo) os clubes do mundo, suas forças e as divisões iniciais
+    // Cria (uma vez por jogo) a lista de clubes (os mesmos 125 do Estadualzão), suas forças e as divisões iniciais
     function initWorldIfNeeded() {
       if (worldState) return;
-      const brAll = BR_CLUBS_BASE.concat(BR_CLUBS_EXTRA);
-      const intAll = Array.from(new Set(RAW_ESTADUALZAO_LIST)).filter(n => !BR_CLUBS_BASE.includes(n));
+      const allClubs = Array.from(new Set(RAW_ESTADUALZAO_LIST));
       const ovr = {};
-      brAll.concat(intAll).forEach(n => { ovr[n] = worldBaseOvr(n); });
+      allClubs.forEach(n => { ovr[n] = worldBaseOvr(n); });
 
-      const score = {};
-      brAll.forEach(n => { score[n] = ovr[n] + Math.random() * 8; });
-      const brSorted = brAll.slice().sort((a, b) => score[b] - score[a]);
+      const hn = humanNameSet();
+      const pool = shuffleArr(allClubs.filter(n => !hn.has(lowerName(n))));   // sorteio de clubes de qualquer nacionalidade
       const slotsA = Math.max(0, 20 - playerCount);
       const humanDiv = {};
       for (let i = 0; i < playerCount; i++) humanDiv[teams[i].id] = 'A';   // todos os jogadores começam na Série A
 
       worldState = {
-        ovr, brAll, intAll, humanDiv,
-        serieABots: brSorted.slice(0, slotsA),
-        serieBBots: brSorted.slice(slotsA, slotsA + 20),
+        ovr, allClubs, humanDiv,
+        serieABots: pool.slice(0, slotsA),
+        serieBBots: pool.slice(slotsA, slotsA + 20),
         estadualOut: []
       };
+    }
+
+    // Sorteia, a cada temporada, os clubes de cada campeonato SEM REPETIR clube entre eles:
+    //   Nacionalzão (Série A + Série B, persistente) | Continental A e B | Estadual
+    function planSeasonClubs(ctx) {
+      composeDivisions();   // garante Série A e B completas e sem repetição
+      const hn = humanNameSet();
+      const inNacional = new Set(worldState.serieABots.concat(worldState.serieBBots));
+      const free = worldState.allClubs.filter(n => !hn.has(lowerName(n)) && !inNacional.has(n));
+
+      // Continentais: os mais fortes entre os clubes que não estão no Nacionalzão (A primeiro, depois B)
+      const byPower = free.map(n => ({ n, s: worldState.ovr[n] + Math.random() * 3 })).sort((a, b) => b.s - a.s).map(x => x.n);
+      const needA = 32 - 5, needB = 32 - 5;   // 5 vagas do Continental A e 5 do B vêm da Série A
+      ctx.contAFillers = byPower.slice(0, needA);
+      ctx.contBFillers = byPower.slice(needA, needA + needB);
+
+      // Estadual: sorteio entre os clubes que sobraram (quem caiu para a Série A2 só volta se faltar clube)
+      const rest = byPower.slice(needA + needB);
+      const out = new Set(worldState.estadualOut);
+      let estPool = shuffleArr(rest.filter(n => !out.has(n)));
+      if (estPool.length < 16) estPool = estPool.concat(shuffleArr(rest.filter(n => out.has(n))));
+      ctx.estadualBots = estPool.slice(0, Math.max(0, 16 - playerCount));
     }
 
     // Pequena variação de força dos clubes a cada temporada
@@ -63,8 +83,9 @@
         queue: ['ESTADUAL', 'NACIONAL', 'CONT_A', 'CONT_B', 'ESTADUALZAO'],
         idx: -1,
         live: false,
-        ctx: { contAQualified: [], contBQualified: [], contAThird: [], contAFillers: [], contBFillers: [] }
+        ctx: { contAQualified: [], contBQualified: [], contAThird: [], contAFillers: [], contBFillers: [], estadualBots: [] }
       };
+      planSeasonClubs(seasonCalendar.ctx);
       advanceCalendar();
     }
 
@@ -147,18 +168,10 @@
     }
 
     // ---------- 1) ESTADUAL: 16 clubes, fase única (potes) + mata-mata dos 8 melhores ----------
-    function chooseEstadualBots(need) {
-      const hn = humanNameSet();
-      const out = new Set(worldState.estadualOut);
-      let pool = shuffleArr(worldState.brAll.filter(n => !hn.has(lowerName(n)) && !out.has(n)));
-      if (pool.length < need) pool = pool.concat(shuffleArr(worldState.brAll.filter(n => !hn.has(lowerName(n)) && out.has(n))));
-      return pool.slice(0, need);
-    }
-
     function startEstadual() {
       const parts = [];
       for (let i = 0; i < playerCount; i++) parts.push(humanTeam(i));
-      chooseEstadualBots(Math.max(0, 16 - playerCount)).forEach(n => parts.push(botTeam(n)));
+      seasonCalendar.ctx.estadualBots.forEach(n => parts.push(botTeam(n)));
 
       const spec = {
         title: '🏆 ESTADUAL - FASE ÚNICA (16 CLUBES)',
@@ -208,7 +221,7 @@
       let botsA = worldState.serieABots.filter(ok).slice(0, slotsA);
       let botsB = worldState.serieBBots.filter(ok).slice(0, slotsB);
       const used = new Set(botsA.concat(botsB));
-      const spare = shuffleArr(worldState.brAll.filter(n => ok(n) && !used.has(n)));
+      const spare = shuffleArr(worldState.allClubs.filter(n => ok(n) && !used.has(n)));
       while (botsA.length < slotsA && spare.length) botsA.push(spare.pop());
       while (botsB.length < slotsB && spare.length) botsB.push(spare.pop());
       worldState.serieABots = botsA;
@@ -280,19 +293,6 @@
     }
 
     // ---------- Continentais ----------
-    function ensureIntPool(count) {
-      const hn = humanNameSet();
-      let pool = worldState.intAll.filter(n => !hn.has(lowerName(n)));
-      let extra = 0;
-      while (pool.length < count) {
-        extra++;
-        const nm = `Clube Continental ${extra}`;
-        if (!worldState.ovr[nm]) { worldState.ovr[nm] = 64 + rndInt(11); worldState.intAll.push(nm); }
-        if (!pool.includes(nm)) pool.push(nm);
-      }
-      return pool.sort((a, b) => worldState.ovr[b] - worldState.ovr[a]);
-    }
-
     function continentalTables(parts, opts) {
       const letters = 'ABCDEFGH';
       return drawGroupsFromPots(parts, 8).map((g, i) => ({
@@ -307,12 +307,6 @@
     // ---------- 3) CONTINENTAL A: os clubes mais fortes ----------
     function startContinentalA() {
       const ctx = seasonCalendar.ctx;
-      const needA = 32 - ctx.contAQualified.length;
-      const needB = 32 - ctx.contBQualified.length;
-      const pool = ensureIntPool(needA + needB);
-      ctx.contAFillers = pool.slice(0, needA);
-      ctx.contBFillers = pool.slice(needA, needA + needB);
-
       const parts = ctx.contAQualified.map(t => ({ ...t })).concat(ctx.contAFillers.map(botTeam));
       const spec = {
         title: '🏆 CONTINENTAL A - FASE DE GRUPOS',
