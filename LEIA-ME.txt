@@ -13,7 +13,7 @@ futebol-manager/
     data/
       logos.js               (escudos dos times)
       teams.js               (lista do Estadualzao e clubes grandes)
-      world-data.js          (NOVO: clubes brasileiros extras da Serie A/B e escudos gerados)
+      world-data.js          (NOVO: forca dos clubes dos campeonatos; nenhum clube novo e criado)
       players.js             (banco de jogadores do leilao)
     menu.js                  (menu principal)
     config-state.js          (configuracoes, premios por campeonato e variaveis do jogo)
@@ -34,8 +34,13 @@ futebol-manager/
     competitions.js          (NOVO: calendario da temporada e regras de cada campeonato)
     ui-comp.js               (NOVO: tela de resumo entre campeonatos e campeoes da temporada)
 
+CLUBES: todos vem da mesma lista do Estadualzao (125 clubes, qualquer nacionalidade). A cada temporada
+os clubes sao sorteados SEM REPETIR entre Estadual, Nacionalzao (Serie A + B) e Continentais.
+(Os 10 primeiros da Serie A vao aos Continentais porque se classificaram, e a Serie A/B se mantem
+entre temporadas com subida e descida.) Continental A e B recebem os clubes mais fortes que sobraram.
+
 CALENDARIO DE CADA TEMPORADA (a proxima temporada so comeca quando TODOS terminam)
-  1. Estadual     - 16 clubes (todos os jogadores + clubes do computador), fase unica estilo
+  1. Estadual     - 16 clubes (todos os jogadores + clubes sorteados), fase unica estilo
                     Champions (4 potes, 8 jogos por time). Top 8 vao ao mata-mata com sorteio das bolas.
                     Os 2 ultimos sao rebaixados para a Serie A2.
   2. Nacionalzao  - Serie A e Serie B, 20 clubes cada, pontos corridos (38 rodadas).
