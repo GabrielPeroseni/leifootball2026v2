@@ -1,33 +1,57 @@
 FUTEBOL MANAGER & LEILAO 2026 - como usar
 
 1) Baixe o ZIP (futebol-manager.zip) e extraia tudo numa pasta.
-2) Abra o arquivo index.html no navegador (duplo clique).
+2) Abra o arquivo index.html no navegador (duplo clique) ou suba a pasta inteira no GitHub Pages.
 3) Mantenha as pastas css/ e js/ junto do index.html, com esta estrutura:
 
 futebol-manager/
-  index.html              (tela e botoes do jogo)
+  index.html                 (tela e botoes do jogo)
   css/
-    style.css             (todo o visual)
+    style.css                (todo o visual)
   js/
-    peer-fallback.js      (plano B se o modo online nao carregar)
+    peer-fallback.js         (plano B se o modo online nao carregar)
     data/
-      logos.js            (escudos dos times)
-      teams.js            (lista do Estadualzao e clubes grandes)
-      players.js          (banco de jogadores do leilao)
-    menu.js               (menu principal)
-    config-state.js       (configuracoes e variaveis do jogo)
-    setup-badges.js       (configuracao de times e escudos)
-    network.js            (modo online / sincronizacao)
-    auction.js            (leilao e trocas)
-    tournament-start.js   (inicio do torneio e forca dos times)
-    match-engine.js       (simulacao das partidas, gols, cartoes, taticas)
-    shootout-engine.js    (logica dos penaltis)
-    draw-engine.js        (sorteio das oitavas)
-    prizes.js             (premios da temporada)
-    ui-shootout.js        (animacao dos penaltis)
-    ui-draw.js            (animacao do sorteio)
-    tournament-flow.js    (fases, estatisticas, resultados)
-    ui-tournament.js      (tabelas, pódio e chaves)
+      logos.js               (escudos dos times)
+      teams.js               (lista do Estadualzao e clubes grandes)
+      world-data.js          (NOVO: clubes brasileiros extras da Serie A/B e escudos gerados)
+      players.js             (banco de jogadores do leilao)
+    menu.js                  (menu principal)
+    config-state.js          (configuracoes, premios por campeonato e variaveis do jogo)
+    setup-badges.js          (configuracao de times e escudos)
+    network.js               (modo online / sincronizacao)
+    auction.js               (leilao e trocas)
+    tournament-start.js      (inicio do Estadualzao e forca dos times)
+    match-engine.js          (simulacao das partidas, gols, cartoes, taticas)
+    shootout-engine.js       (logica dos penaltis)
+    draw-engine.js           (sorteio das bolas)
+    prizes.js                (premios acumulados da temporada)
+    ui-shootout.js           (animacao dos penaltis)
+    ui-draw.js               (animacao do sorteio)
+    tournament-flow.js       (fases do Estadualzao, estatisticas, resultados)
+    ui-tournament.js         (tabelas, podio, chaves, tabela de desempenho e titulos)
+    fixtures.js              (NOVO: tabelas de jogos, potes, sorteio de grupos, simulacao silenciosa)
+    comp-engine.js           (NOVO: motor dos campeonatos: pontos corridos, grupos e mata-mata ida/volta)
+    competitions.js          (NOVO: calendario da temporada e regras de cada campeonato)
+    ui-comp.js               (NOVO: tela de resumo entre campeonatos e campeoes da temporada)
+
+CALENDARIO DE CADA TEMPORADA (a proxima temporada so comeca quando TODOS terminam)
+  1. Estadual     - 16 clubes (todos os jogadores + clubes do computador), fase unica estilo
+                    Champions (4 potes, 8 jogos por time). Top 8 vao ao mata-mata com sorteio das bolas.
+                    Os 2 ultimos sao rebaixados para a Serie A2.
+  2. Nacionalzao  - Serie A e Serie B, 20 clubes cada, pontos corridos (38 rodadas).
+                    Serie A: 1o-5o -> Continental A | 6o-10o -> Continental B | 4 ultimos caem.
+                    Serie B: 4 primeiros sobem. So e mostrado ao vivo se houver jogador na serie.
+  3. Continental A - 32 clubes mais fortes, 8 grupos de 4 (ida e volta). 1o e 2o vao ao mata-mata
+                    (oitavas, quartas e semi em ida e volta; final em jogo unico). 3o vai ao Continental B.
+  4. Continental B - 32 clubes, 8 grupos de 4. 1o vai as oitavas; 2o enfrenta o 3o do Continental A
+                    (playoff ida e volta). Depois mata-mata igual ao Continental A.
+  5. Estadualzao  - o campeonato que ja existia (128 times), final em ida e volta.
+
+  Campeonatos sem nenhum jogador sao simulados na hora (sem tela). Premios e titulos se acumulam.
+
+AJUSTES RAPIDOS
+  - Duracao das partidas: config-state.js (MATCH_DURATION_MS, GROUP_MATCH_DURATION_MS, NACIONAL_MATCH_DURATION_MS)
+  - Premios de cada campeonato: config-state.js (COMP_PRIZES)
 
 IMPORTANTE: a ordem dos <script> no index.html importa. Nao mude a ordem.
 Escudos e o modo online usam internet (links externos).

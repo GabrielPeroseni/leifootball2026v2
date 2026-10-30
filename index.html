@@ -406,7 +406,7 @@
   <!-- SORTEIO DAS OITAVAS DE FINAL (bolas e papéis) -->
   <div id="draw-overlay">
     <div class="dr-wrap">
-      <div class="dr-title">🎱 Sorteio das Oitavas de Final</div>
+      <div class="dr-title" id="dr-title">🎱 Sorteio das Oitavas de Final</div>
       <div class="dr-sub" id="dr-sub"></div>
       <div class="dr-stage" id="dr-stage">
         <div class="dr-bowl" id="dr-bowl"></div>
@@ -417,6 +417,14 @@
       <div class="dr-bracket" id="dr-bracket"></div>
       <div class="dr-banner" id="dr-banner"></div>
     </div>
+  </div>
+
+  <!-- RESUMO DE CADA CAMPEONATO DA TEMPORADA -->
+  <div id="comp-summary-screen" class="screen" style="display: none; z-index: 150;">
+    <h1 id="cs-title" style="color: var(--text-main); font-size: 1.5rem; text-align:center; text-transform: uppercase; margin-top:10px;"></h1>
+    <p id="cs-sub" style="color:#60a5fa; font-weight:600; text-align:center; font-size:0.9rem;"></p>
+    <div id="cs-body" class="cs-body"></div>
+    <button class="btn-start" id="cs-next" style="margin: 15px 0 25px;" onclick="handleCompNext()">▶️ Continuar</button>
   </div>
 
   <!-- PÓDIO DA COMPETIÇÃO -->
@@ -442,6 +450,7 @@
       </div>
     </div>
     <div id="podium-prizes" class="podium-prizes"></div>
+    <div id="season-log-box" class="season-stats-box" style="display:none;"></div>
     <div id="season-stats-box" class="season-stats-box"></div>
     <button class="btn-start" id="btn-next-phase" style="margin-top:25px;" onclick="handlePodiumNextPhase()">Avançar para a próxima fase</button>
   </div>
@@ -458,6 +467,7 @@
   <!-- Scripts do jogo: a ORDEM importa, não altere -->
   <script src="js/data/logos.js"></script>
   <script src="js/data/teams.js"></script>
+  <script src="js/data/world-data.js"></script>
   <script src="js/menu.js"></script>
   <script src="js/data/players.js"></script>
   <script src="js/config-state.js"></script>
@@ -473,5 +483,9 @@
   <script src="js/ui-draw.js"></script>
   <script src="js/tournament-flow.js"></script>
   <script src="js/ui-tournament.js"></script>
+  <script src="js/fixtures.js"></script>
+  <script src="js/comp-engine.js"></script>
+  <script src="js/competitions.js"></script>
+  <script src="js/ui-comp.js"></script>
 </body>
 </html>
