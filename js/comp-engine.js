@@ -41,7 +41,9 @@
     // spec: { title, duration, tables: [{ key, label, teams, rounds, qualify, zones, legend }] }
     // Ao terminar, cada tabela recebe t.table (classificação final) e done() é chamado.
     function runLeaguePhase(spec, done) {
-      const liveTables = spec.tables.filter(t => t.teams.some(x => x.isHuman));
+      // showAll: se houver jogador em qualquer grupo, TODOS os grupos passam ao vivo juntos (ex.: os 8 do Continental)
+      const anyHuman = spec.tables.some(t => t.teams.some(x => x.isHuman));
+      const liveTables = (spec.showAll && anyHuman) ? spec.tables.slice() : spec.tables.filter(t => t.teams.some(x => x.isHuman));
       spec.tables.forEach(t => { if (!liveTables.includes(t)) silentLeagueTable(t); });
       if (!liveTables.length) { done(); return; }
       seasonCalendar.live = true;

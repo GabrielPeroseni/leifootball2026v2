@@ -20,40 +20,59 @@
       const ovr = {};
       allClubs.forEach(n => { ovr[n] = worldBaseOvr(n); });
 
-      const hn = humanNameSet();
-      const pool = shuffleArr(allClubs.filter(n => !hn.has(lowerName(n))));   // sorteio de clubes de qualquer nacionalidade
-      const slotsA = Math.max(0, 20 - playerCount);
       const humanDiv = {};
       for (let i = 0; i < playerCount; i++) humanDiv[teams[i].id] = 'A';   // todos os jogadores começam na Série A
 
       worldState = {
         ovr, allClubs, humanDiv,
-        serieABots: pool.slice(0, slotsA),
-        serieBBots: pool.slice(slotsA, slotsA + 20),
+        serieABots: [], serieBBots: [],   // preenchidos por composeDivisions (mais fortes na A, mais fracos na B)
         estadualOut: []
       };
     }
 
-    // Sorteia, a cada temporada, os clubes de cada campeonato SEM REPETIR clube entre eles:
-    //   Nacionalzão (Série A + Série B, persistente) | Continental A e B | Estadual
+    // Força de um clube (a mesma usada nas partidas: força base + bônus de clube grande)
+    function clubStrength(n) {
+      return getEffectiveOvr({ name: n, ovr: worldState.ovr[n], isHuman: false });
+    }
+
+    // Ordena clubes do mais forte para o mais fraco (desempate fixo pelo nome)
+    function rankByStrength(names) {
+      return names.slice().sort((a, b) => clubStrength(b) - clubStrength(a) || (a < b ? -1 : a > b ? 1 : 0));
+    }
+
+    // Planeja os clubes da temporada. Os campeonatos NÃO são mais exclusivos: um clube forte pode estar
+    // na Série A e também no Continental A.
+    //   Série A = os clubes mais fortes | Série B = os mais fracos (ver composeDivisions)
+    //   Continentais = escolhidos depois do Nacionalzão (ver planContinentals)
+    //   Estadual = clubes de nível médio (fora dos 64 mais fortes e fora da Série B)
     function planSeasonClubs(ctx) {
-      composeDivisions();   // garante Série A e B completas e sem repetição
+      composeDivisions();   // Série A (mais fortes) e Série B (mais fracos)
       const hn = humanNameSet();
-      const inNacional = new Set(worldState.serieABots.concat(worldState.serieBBots));
-      const free = worldState.allClubs.filter(n => !hn.has(lowerName(n)) && !inNacional.has(n));
-
-      // Continentais: os mais fortes entre os clubes que não estão no Nacionalzão (A primeiro, depois B)
-      const byPower = free.map(n => ({ n, s: worldState.ovr[n] + Math.random() * 3 })).sort((a, b) => b.s - a.s).map(x => x.n);
-      const needA = 32 - 5, needB = 32 - 5;   // 5 vagas do Continental A e 5 do B vêm da Série A
-      ctx.contAFillers = byPower.slice(0, needA);
-      ctx.contBFillers = byPower.slice(needA, needA + needB);
-
-      // Estadual: sorteio entre os clubes que sobraram (quem caiu para a Série A2 só volta se faltar clube)
-      const rest = byPower.slice(needA + needB);
+      const ranked = rankByStrength(worldState.allClubs.filter(n => !hn.has(lowerName(n))));
+      const inB = new Set(worldState.serieBBots);
+      const need = Math.max(0, 16 - playerCount);
       const out = new Set(worldState.estadualOut);
-      let estPool = shuffleArr(rest.filter(n => !out.has(n)));
-      if (estPool.length < 16) estPool = estPool.concat(shuffleArr(rest.filter(n => out.has(n))));
-      ctx.estadualBots = estPool.slice(0, Math.max(0, 16 - playerCount));
+
+      const tail = ranked.slice(64);                        // fora do nível dos continentais
+      let mid = tail.filter(n => !inB.has(n));              // e fora da Série B
+      let estPool = shuffleArr(mid.filter(n => !out.has(n)));
+      if (estPool.length < need) estPool = estPool.concat(shuffleArr(mid.filter(n => out.has(n))));
+      if (estPool.length < need) estPool = estPool.concat(shuffleArr(tail.filter(n => inB.has(n))));
+      ctx.estadualBots = estPool.slice(0, need);
+    }
+
+    // Chamado depois do Nacionalzão (quando já se sabe quem se classificou): completa os 32 clubes de cada
+    // Continental com os clubes MAIS FORTES do mundo, mesmo que já estejam na Série A (repetição permitida).
+    // O Continental B pega os mais fortes que sobraram depois do Continental A.
+    function planContinentals(ctx) {
+      const hn = humanNameSet();
+      const qA = new Set(ctx.contAQualified.map(t => t.name));
+      const qB = new Set(ctx.contBQualified.map(t => t.name));
+      const ranked = rankByStrength(worldState.allClubs.filter(n => !hn.has(lowerName(n)) && !qA.has(n) && !qB.has(n)));
+      const needA = Math.max(0, 32 - ctx.contAQualified.length);
+      const needB = Math.max(0, 32 - ctx.contBQualified.length);
+      ctx.contAFillers = ranked.slice(0, needA);
+      ctx.contBFillers = ranked.slice(needA, needA + needB);
     }
 
     // Pequena variação de força dos clubes a cada temporada
@@ -83,7 +102,7 @@
         queue: ['ESTADUAL', 'NACIONAL', 'CONT_A', 'CONT_B', 'ESTADUALZAO'],
         idx: -1,
         live: false,
-        ctx: { contAQualified: [], contBQualified: [], contAThird: [], contAFillers: [], contBFillers: [], estadualBots: [] }
+        ctx: { contAQualified: [], contBQualified: [], contAThird: [], contAFillers: [], contBFillers: [], contBTables: null, estadualBots: [] }
       };
       planSeasonClubs(seasonCalendar.ctx);
       advanceCalendar();
@@ -210,20 +229,18 @@
     }
 
     // ---------- 2) NACIONALZÃO: Série A e Série B (20 clubes, turno e returno, 38 rodadas) ----------
+    // Série A = clubes MAIS FORTES | Série B = clubes MAIS FRACOS (sempre reavaliado a cada temporada).
+    // Os times dos jogadores ficam na divisão em que estão (sobem e descem normalmente) e ocupam vagas.
     function composeDivisions() {
       const hn = humanNameSet();
-      const ok = n => !hn.has(lowerName(n));
       const humansA = [], humansB = [];
       for (let i = 0; i < playerCount; i++) {
         (worldState.humanDiv[teams[i].id] === 'B' ? humansB : humansA).push(i);
       }
       const slotsA = 20 - humansA.length, slotsB = 20 - humansB.length;
-      let botsA = worldState.serieABots.filter(ok).slice(0, slotsA);
-      let botsB = worldState.serieBBots.filter(ok).slice(0, slotsB);
-      const used = new Set(botsA.concat(botsB));
-      const spare = shuffleArr(worldState.allClubs.filter(n => ok(n) && !used.has(n)));
-      while (botsA.length < slotsA && spare.length) botsA.push(spare.pop());
-      while (botsB.length < slotsB && spare.length) botsB.push(spare.pop());
+      const ranked = rankByStrength(worldState.allClubs.filter(n => !hn.has(lowerName(n))));
+      const botsA = ranked.slice(0, slotsA);
+      const botsB = ranked.slice(Math.max(slotsA, ranked.length - slotsB));
       worldState.serieABots = botsA;
       worldState.serieBBots = botsB;
       return { humansA, humansB, botsA, botsB };
@@ -293,10 +310,12 @@
     }
 
     // ---------- Continentais ----------
-    function continentalTables(parts, opts) {
+    // prefix/labelPrefix só são usados quando Continental A e B jogam a fase de grupos ao mesmo tempo
+    function continentalTables(parts, opts, prefix, labelPrefix) {
       const letters = 'ABCDEFGH';
+      prefix = prefix || ''; labelPrefix = labelPrefix || '';
       return drawGroupsFromPots(parts, 8).map((g, i) => ({
-        key: letters[i], label: `Grupo ${letters[i]}`, teams: g,
+        key: prefix + letters[i], label: `${labelPrefix}Grupo ${letters[i]}`, teams: g,
         rounds: doubleRoundRobin(g.map(t => t.id)),
         qualify: opts.qualify, zones: opts.zones, legend: opts.legend
       }));
@@ -304,23 +323,40 @@
 
     function contLegs(n) { return n === 2 ? 1 : 2; }   // ida e volta; a final é em jogo único
 
-    // ---------- 3) CONTINENTAL A: os clubes mais fortes ----------
+    const CONT_A_OPTS = {
+      qualify: 3,
+      zones: [{ from: 1, to: 2, cls: 'z-up' }, { from: 3, to: 3, cls: 'z-mid' }],
+      legend: '🟢 1º-2º: oitavas • 🔵 3º: vai ao Playoff do Continental B'
+    };
+    const CONT_B_OPTS = {
+      qualify: 2,
+      zones: [{ from: 1, to: 1, cls: 'z-up' }, { from: 2, to: 2, cls: 'z-mid' }],
+      legend: '🟢 1º: oitavas • 🔵 2º: Playoff contra o 3º do Continental A'
+    };
+
+    function contAParts(ctx) { return ctx.contAQualified.map(t => ({ ...t })).concat(ctx.contAFillers.map(botTeam)); }
+    function contBParts(ctx) { return ctx.contBQualified.map(t => ({ ...t })).concat(ctx.contBFillers.map(botTeam)); }
+
+    // ---------- 3) CONTINENTAL A: os 32 clubes mais fortes (8 grupos) ----------
+    // Se houver jogadores nos DOIS continentais, as fases de grupos do A e do B acontecem ao vivo ao mesmo tempo.
     function startContinentalA() {
       const ctx = seasonCalendar.ctx;
-      const parts = ctx.contAQualified.map(t => ({ ...t })).concat(ctx.contAFillers.map(botTeam));
+      planContinentals(ctx);
+      const combined = ctx.contAQualified.some(t => t.isHuman) && ctx.contBQualified.some(t => t.isHuman);
+
+      const tablesA = continentalTables(contAParts(ctx), CONT_A_OPTS, '', combined ? 'Cont. A • ' : '');
+      ctx.contBTables = combined ? continentalTables(contBParts(ctx), CONT_B_OPTS, 'b', 'Cont. B • ') : null;
+
       const spec = {
-        title: '🏆 CONTINENTAL A - FASE DE GRUPOS',
+        title: combined ? '🏆 CONTINENTAL A e B - FASE DE GRUPOS (AO VIVO)' : '🏆 CONTINENTAL A - FASE DE GRUPOS',
         duration: GROUP_MATCH_DURATION_MS,
-        tables: continentalTables(parts, {
-          qualify: 3,
-          zones: [{ from: 1, to: 2, cls: 'z-up' }, { from: 3, to: 3, cls: 'z-mid' }],
-          legend: '🟢 1º-2º: oitavas • 🔵 3º: vai ao Playoff do Continental B'
-        })
+        showAll: true,   // mostra os 8 grupos ao vivo (não só os que têm jogador)
+        tables: combined ? tablesA.concat(ctx.contBTables) : tablesA
       };
 
       runLeaguePhase(spec, () => {
         const firsts = [], seconds = [], thirds = [];
-        spec.tables.forEach(t => { firsts.push(t.table[0]); seconds.push(t.table[1]); thirds.push(t.table[2]); });
+        tablesA.forEach(t => { firsts.push(t.table[0]); seconds.push(t.table[1]); thirds.push(t.table[2]); });
         ctx.contAThird = thirds.map(plainTeam);
         runKOPhase({
           title: '🏆 CONTINENTAL A - MATA-MATA',
@@ -339,46 +375,48 @@
       });
     }
 
-    // ---------- 4) CONTINENTAL B: fortes que não estão no A + playoff com os 3ºs do A ----------
+    // ---------- 4) CONTINENTAL B: os mais fortes que sobraram + playoff com os 3ºs do A ----------
     function startContinentalB() {
       const ctx = seasonCalendar.ctx;
-      const parts = ctx.contBQualified.map(t => ({ ...t })).concat(ctx.contBFillers.map(botTeam));
-      const spec = {
+      if (ctx.contBTables) {   // a fase de grupos já foi jogada junto com o Continental A
+        contBAfterGroups(ctx.contBTables);
+        return;
+      }
+      const tables = continentalTables(contBParts(ctx), CONT_B_OPTS);
+      runLeaguePhase({
         title: '🏆 CONTINENTAL B - FASE DE GRUPOS',
         duration: GROUP_MATCH_DURATION_MS,
-        tables: continentalTables(parts, {
-          qualify: 2,
-          zones: [{ from: 1, to: 1, cls: 'z-up' }, { from: 2, to: 2, cls: 'z-mid' }],
-          legend: '🟢 1º: oitavas • 🔵 2º: Playoff contra o 3º do Continental A'
-        })
-      };
+        showAll: true,
+        tables
+      }, () => contBAfterGroups(tables));
+    }
 
-      runLeaguePhase(spec, () => {
-        const firsts = spec.tables.map(t => plainTeam(t.table[0]));
-        const seconds = shuffleArr(spec.tables.map(t => plainTeam(t.table[1])));
-        const thirds = shuffleArr(ctx.contAThird);
-        const pairs = seconds.map((s, i) => [thirds[i], s]);   // o 3º do A recebe a ida; o 2º do B decide em casa
-        const playoffTeams = [];
-        pairs.forEach(p => playoffTeams.push(p[0], p[1]));
+    function contBAfterGroups(tables) {
+      const ctx = seasonCalendar.ctx;
+      const firsts = tables.map(t => plainTeam(t.table[0]));
+      const seconds = shuffleArr(tables.map(t => plainTeam(t.table[1])));
+      const thirds = shuffleArr(ctx.contAThird);
+      const pairs = seconds.map((s, i) => [thirds[i], s]);   // o 3º do A recebe a ida; o 2º do B decide em casa
+      const playoffTeams = [];
+      pairs.forEach(p => playoffTeams.push(p[0], p[1]));
 
+      runKOPhase({
+        title: '🏆 CONTINENTAL B - PLAYOFFS (REPESCAGEM)',
+        teams: playoffTeams, pairs, singleRound: true,
+        legs: () => 2, stageName: () => 'Playoff (Repescagem)'
+      }, po => {
         runKOPhase({
-          title: '🏆 CONTINENTAL B - PLAYOFFS (REPESCAGEM)',
-          teams: playoffTeams, pairs, singleRound: true,
-          legs: () => 2, stageName: () => 'Playoff (Repescagem)'
-        }, po => {
-          runKOPhase({
-            title: '🏆 CONTINENTAL B - MATA-MATA',
-            teams: shuffleArr(firsts.concat(po.winners.map(plainTeam))), draw: true,
-            legs: contLegs, stageName: koStageName
-          }, ko => {
-            const prizes = awardComp('CONT_B', 'Continental B', { 1: [ko.champion], 2: [ko.runnerUp], 3: ko.semifinalists });
-            logSeason('Continental B', ko.champion, ko.runnerUp);
-            finishCompetition({
-              title: '🏆 CONTINENTAL B ENCERRADO',
-              sub: 'Próximo campeonato: Estadualzão (decisão da temporada)',
-              sections: [podiumSection(ko)],
-              prizes
-            });
+          title: '🏆 CONTINENTAL B - MATA-MATA',
+          teams: shuffleArr(firsts.concat(po.winners.map(plainTeam))), draw: true,
+          legs: contLegs, stageName: koStageName
+        }, ko => {
+          const prizes = awardComp('CONT_B', 'Continental B', { 1: [ko.champion], 2: [ko.runnerUp], 3: ko.semifinalists });
+          logSeason('Continental B', ko.champion, ko.runnerUp);
+          finishCompetition({
+            title: '🏆 CONTINENTAL B ENCERRADO',
+            sub: 'Próximo campeonato: Estadualzão (decisão da temporada)',
+            sections: [podiumSection(ko)],
+            prizes
           });
         });
       });
