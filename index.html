@@ -1,14 +1,13 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>FUTEBOL MANAGER & LEILÃO 2026</title>
-  <!-- PeerJS (modo online): tenta jsDelivr, depois cdnjs, depois unpkg -->
-  <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.2/dist/peerjs.min.js"></script>
-  <script>window.Peer || document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.2/peerjs.min.js"><\/script>');</script>
-  <script src="js/peer-fallback.js"></script>
-  <link rel="stylesheet" href="css/style.css">
+  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+  <link rel="stylesheet" href="css/base.css?v=1">
+  <link rel="stylesheet" href="css/carreira.css?v=1">
+  <link rel="stylesheet" href="css/estadualzao.css?v=1">
 </head>
 <body>
 
@@ -33,11 +32,16 @@
         <div class="mode-desc">Crie um único jogador, evolua seus atributos partida a partida e torne-se uma lenda do futebol mundial.</div>
       </div>
 
-      <div class="mode-card disabled" onclick="selectGameMode('carreira')">
-        <span class="badge-coming-soon">Em Breve</span>
+      <div class="mode-card" onclick="selectGameMode('estadualzao')">
+        <div class="mode-icon">🏟️</div>
+        <div class="mode-title">Estadualzão 5x5 Co-op</div>
+        <div class="mode-desc">Cada amigo controla um jogador (goleiro, fixo, alas e pivô) do mesmo time e disputa um mata-mata contra até 128 times.</div>
+      </div>
+
+      <div class="mode-card" onclick="selectGameMode('carreira')">
         <div class="mode-icon">📋</div>
         <div class="mode-title">Modo Carreira</div>
-        <div class="mode-desc">Assuma o controle total de um clube. Gerencie finanças, contratações, táticas e categorias de base.</div>
+        <div class="mode-desc">Crie seu treinador, assuma um clube real ou criado por você e dispute liga e mata-mata, temporada após temporada.</div>
       </div>
     </div>
   </div>
@@ -82,6 +86,7 @@
     </div>
 
     <div class="setup-grid" id="setup-teams-grid">
+      <!-- Times 1 a 8 -->
       <div class="team-input-card" id="card-t0">
         <label><b>Time 1 (Host)</b></label>
         <div class="badge-preview" id="badge-prev-0"></div>
@@ -318,7 +323,7 @@
       <div class="controls-panel">
         <p id="turn-indicator" style="text-align:center; font-weight:600; font-size: 0.85rem; color: var(--text-main);">Aguardando dado...</p>
         <div class="btn-group">
-          <button class="btn-action btn-pass" id="btn-pass" onclick="handlePass()" disabled>Recusar (<span id="my-passes-count">4</span>x)</button>
+          <button class="btn-action btn-pass" id="btn-pass" onclick="handlePass()" disabled>Recusar (<span id="my-passes-count">3</span>x)</button>
           <button class="btn-action btn-zero" id="btn-bid-0" onclick="handleBid(0)" disabled>Lance 0 Tokens</button>
           <button class="btn-action btn-bid" id="btn-bid-1" onclick="handleBid(1)" disabled>+1 Token</button>
           <button class="btn-action btn-bid" id="btn-bid-2" onclick="handleBid(2)" disabled>+2 Tokens</button>
@@ -331,22 +336,8 @@
   <!-- TELA DE CAMPEONATO -->
   <div id="league-screen" class="screen" style="display: none;">
     <div class="brasfoot-header">
-      <h2 style="color:var(--text-main); font-size: 1.2rem; text-transform: uppercase; letter-spacing: 1px;" id="phase-indicator">🏆 ESTADUALZÃO</h2>
+      <h2 style="color:var(--text-main); font-size: 1.2rem; text-transform: uppercase; letter-spacing: 1px;" id="phase-indicator">🏆 COPA DOS 32 - FASE DE GRUPOS</h2>
       <p id="round-indicator" style="color:var(--text-muted); font-size:0.85rem; margin-top:2px;">Simulação de Partidas</p>
-    </div>
-
-    <!-- PAINEL TÁTICO: aparece só para quem controla um time que está jogando -->
-    <div id="tactics-panel">
-      <div class="tp-top">
-        <div class="tp-match" id="tp-match"></div>
-        <div class="tp-cards" id="tp-cards"></div>
-      </div>
-      <div class="tp-buttons">
-        <button class="tp-btn" id="tp-DEF" onclick="setTactic('DEF')">🛡️ Defensivo</button>
-        <button class="tp-btn" id="tp-BAL" onclick="setTactic('BAL')">⚖️ Equilibrado</button>
-        <button class="tp-btn" id="tp-OFF" onclick="setTactic('OFF')">⚔️ Ofensivo</button>
-      </div>
-      <div class="tp-desc" id="tp-desc"></div>
     </div>
 
     <div class="brasfoot-grid">
@@ -355,76 +346,11 @@
       </div>
 
       <div class="league-table-container">
-        <div class="top-scorers-box" id="top-scorers-container">
-          <div class="top-scorers-title">⚽ Artilharia do Campeonato</div>
-          <div id="top-scorers-list"><div style="font-size:0.75rem; color:var(--text-muted);">Nenhum gol marcado ainda.</div></div>
-        </div>
         <h3 style="color:var(--text-main); text-align:center; margin-bottom:6px; font-size:0.95rem; text-transform:uppercase;" id="side-panel-title">Tabelas / Classificação</h3>
         <div class="group-tables-grid" id="groups-container"></div>
         <div class="bracket-list" id="bracket-list-container" style="display:none;"></div>
       </div>
     </div>
-  </div>
-
-  <!-- DISPUTA DE PÊNALTIS (sobrepõe a tela inteira) -->
-  <div id="shootout-overlay">
-    <div class="so-wrap">
-      <div class="so-stage" id="so-stage">⚽ Disputa de Pênaltis</div>
-      <div class="so-sub" id="so-sub"></div>
-      <div class="so-scoreboard">
-        <div class="so-team" id="so-home"></div>
-        <div class="so-score" id="so-score">0 - 0</div>
-        <div class="so-team away" id="so-away"></div>
-      </div>
-      <div class="so-scene" id="so-scene">
-        <div class="so-goal"></div>
-        <div class="so-line"></div>
-        <div class="so-keeper" id="so-keeper"></div>
-        <div class="so-spot"></div>
-        <div class="so-ball" id="so-ball">⚽</div>
-        <div class="so-flash" id="so-flash"></div>
-        <div class="so-zones" id="so-zones">
-          <button class="so-zone" id="so-zone-L-T" onclick="soChoose('L','T')">↖</button>
-          <button class="so-zone" id="so-zone-C-T" onclick="soChoose('C','T')">↑</button>
-          <button class="so-zone" id="so-zone-R-T" onclick="soChoose('R','T')">↗</button>
-          <button class="so-zone" id="so-zone-L-B" onclick="soChoose('L','B')">↙</button>
-          <button class="so-zone" id="so-zone-C-B" onclick="soChoose('C','B')">↓</button>
-          <button class="so-zone" id="so-zone-R-B" onclick="soChoose('R','B')">↘</button>
-        </div>
-      </div>
-      <div class="so-prompt" id="so-prompt"></div>
-      <div class="so-timerbar" id="so-timerbar"><div class="so-timerfill" id="so-timerfill"></div></div>
-      <div class="so-kicker" id="so-kicker"></div>
-      <div class="so-rows">
-        <div class="so-row"><div class="so-row-name" id="so-row-home-name"></div><div class="so-slots" id="so-slots-home"></div></div>
-        <div class="so-row"><div class="so-row-name" id="so-row-away-name"></div><div class="so-slots" id="so-slots-away"></div></div>
-      </div>
-      <div class="so-banner" id="so-banner"></div>
-    </div>
-  </div>
-
-  <!-- SORTEIO DAS OITAVAS DE FINAL (bolas e papéis) -->
-  <div id="draw-overlay">
-    <div class="dr-wrap">
-      <div class="dr-title" id="dr-title">🎱 Sorteio das Oitavas de Final</div>
-      <div class="dr-sub" id="dr-sub"></div>
-      <div class="dr-stage" id="dr-stage">
-        <div class="dr-bowl" id="dr-bowl"></div>
-        <div class="dr-ball" id="dr-ball"><div class="dr-ball-in" id="dr-ball-in"><div class="h1"></div><div class="h2"></div></div></div>
-        <div class="dr-paper" id="dr-paper"></div>
-      </div>
-      <div class="dr-status" id="dr-status"></div>
-      <div class="dr-bracket" id="dr-bracket"></div>
-      <div class="dr-banner" id="dr-banner"></div>
-    </div>
-  </div>
-
-  <!-- RESUMO DE CADA CAMPEONATO DA TEMPORADA -->
-  <div id="comp-summary-screen" class="screen" style="display: none; z-index: 150;">
-    <h1 id="cs-title" style="color: var(--text-main); font-size: 1.5rem; text-align:center; text-transform: uppercase; margin-top:10px;"></h1>
-    <p id="cs-sub" style="color:#60a5fa; font-weight:600; text-align:center; font-size:0.9rem;"></p>
-    <div id="cs-body" class="cs-body"></div>
-    <button class="btn-start" id="cs-next" style="margin: 15px 0 25px;" onclick="handleCompNext()">▶️ Continuar</button>
   </div>
 
   <!-- PÓDIO DA COMPETIÇÃO -->
@@ -449,13 +375,10 @@
         <div class="podium-team-name" id="podium-name-3">--</div>
       </div>
     </div>
-    <div id="podium-prizes" class="podium-prizes"></div>
-    <div id="season-log-box" class="season-stats-box" style="display:none;"></div>
-    <div id="season-stats-box" class="season-stats-box"></div>
     <button class="btn-start" id="btn-next-phase" style="margin-top:25px;" onclick="handlePodiumNextPhase()">Avançar para a próxima fase</button>
   </div>
 
-  <!-- MODAL DE TROCA DE JOGADOR (TEMPORADAS DE REFORÇO) -->
+  <!-- MODAL DE TROCA DE JOGADOR (2ª TEMPORADA) -->
   <div id="swap-modal-overlay">
     <div class="swap-modal">
       <div class="swap-modal-title" id="swap-modal-title">Substituir Jogador</div>
@@ -464,28 +387,471 @@
     </div>
   </div>
 
-  <!-- Scripts do jogo: a ORDEM importa, não altere -->
-  <script src="js/data/logos.js"></script>
-  <script src="js/data/teams.js"></script>
-  <script src="js/data/world-data.js"></script>
-  <script src="js/menu.js"></script>
-  <script src="js/data/players.js"></script>
-  <script src="js/config-state.js"></script>
-  <script src="js/setup-badges.js"></script>
-  <script src="js/network.js"></script>
-  <script src="js/auction.js"></script>
-  <script src="js/tournament-start.js"></script>
-  <script src="js/match-engine.js"></script>
-  <script src="js/shootout-engine.js"></script>
-  <script src="js/draw-engine.js"></script>
-  <script src="js/prizes.js"></script>
-  <script src="js/ui-shootout.js"></script>
-  <script src="js/ui-draw.js"></script>
-  <script src="js/tournament-flow.js"></script>
-  <script src="js/ui-tournament.js"></script>
-  <script src="js/fixtures.js"></script>
-  <script src="js/comp-engine.js"></script>
-  <script src="js/competitions.js"></script>
-  <script src="js/ui-comp.js"></script>
+  <!-- ============ MODO CARREIRA: CONFIGURAÇÃO ============ -->
+  <div id="career-setup-screen" class="screen" style="display: none;">
+    <div class="cr-topbar">
+      <button class="btn-back" onclick="crBackToMenu()">← Menu Principal</button>
+      <h1 class="setup-title" style="margin-top: 0;">📋 Modo Carreira 2026</h1>
+      <div class="cr-steps">
+        <span id="cr-step1-ind" class="cr-step active">1. Treinador</span>
+        <span id="cr-step2-ind" class="cr-step">2. Clube</span>
+      </div>
+    </div>
+
+    <div id="cr-continue-box" class="cr-continue" style="display: none;">
+      <div>
+        <div class="cr-continue-title">💾 Carreira salva encontrada</div>
+        <div id="cr-continue-info" class="cr-muted"></div>
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <button class="btn-start" onclick="crContinueCareer()">▶ Continuar</button>
+        <button class="btn-back" onclick="crDeleteSave()">Apagar</button>
+      </div>
+    </div>
+
+    <!-- PASSO 1: TREINADOR -->
+    <div id="cr-step1" class="cr-wrap">
+      <div class="cr-grid3">
+        <div class="cr-panel">
+          <div class="cr-panel-head"><h3>👔 Dados Pessoais</h3></div>
+          <div class="cr-field"><label>Nome</label><input type="text" id="cr-first" value="Carlos" maxlength="20" oninput="crUpdateAvatar()"></div>
+          <div class="cr-field"><label>Sobrenome</label><input type="text" id="cr-last" value="Ancelotti" maxlength="20" oninput="crUpdateAvatar()"></div>
+          <div class="cr-row2">
+            <div class="cr-field"><label>Nacionalidade</label>
+              <select id="cr-nat" onchange="crUpdateAvatar()">
+                <option value="🇧🇷 Brasil">🇧🇷 Brasil</option>
+                <option value="🇮🇹 Itália">🇮🇹 Itália</option>
+                <option value="🇪🇸 Espanha">🇪🇸 Espanha</option>
+                <option value="🇦🇷 Argentina">🇦🇷 Argentina</option>
+                <option value="🇩🇪 Alemanha">🇩🇪 Alemanha</option>
+                <option value="🇫🇷 França">🇫🇷 França</option>
+                <option value="🇵🇹 Portugal">🇵🇹 Portugal</option>
+                <option value="🏴󠁧󠁢󠁥󠁮󠁧󠁿 Inglaterra">🏴󠁧󠁢󠁥󠁮󠁧󠁿 Inglaterra</option>
+              </select>
+            </div>
+            <div class="cr-field"><label>Idade</label><input type="number" id="cr-age" value="48" min="30" max="75" oninput="crUpdateAvatar()"></div>
+          </div>
+        </div>
+
+        <div class="cr-panel">
+          <div class="cr-panel-head"><h3>🎨 Customização Visual</h3></div>
+          <div class="cr-row2">
+            <div class="cr-field"><label>Tom de Pele</label>
+              <select id="cr-skin" onchange="crUpdateAvatar()">
+                <option value="#f8d5c2">Clara</option><option value="#e0a885">Morena Clara</option>
+                <option value="#8d5524">Morena Escura</option><option value="#4a2c11">Negra</option>
+              </select></div>
+            <div class="cr-field"><label>Traje Tático</label>
+              <select id="cr-outfit" onchange="crUpdateAvatar()">
+                <option value="suit">Terno Moderno</option><option value="tracksuit">Agasalho Esportivo</option>
+                <option value="casual">Casual Chic</option><option value="coat">Sobretudo de Inverno</option>
+                <option value="jacket">Jaqueta de Couro</option>
+              </select></div>
+          </div>
+          <div class="cr-row2">
+            <div class="cr-field"><label>Estilo de Cabelo</label>
+              <select id="cr-hair" onchange="crUpdateAvatar()">
+                <option value="short">Curto Social</option><option value="fade">Degradê Moderno</option>
+                <option value="pompadour">Topete Clássico</option><option value="bald">Careca / Raspado</option>
+                <option value="long">Ondulado Longo</option><option value="dreads">Dreadlocks</option>
+              </select></div>
+            <div class="cr-field"><label>Cor do Cabelo</label>
+              <select id="cr-hair-color" onchange="crUpdateAvatar()">
+                <option value="#171717">Preto</option><option value="#3b2219">Castanho Escuro</option>
+                <option value="#a3a3a3">Grisalho</option><option value="#d4a359">Loiro</option><option value="#8d3211">Ruivo</option>
+              </select></div>
+          </div>
+          <div class="cr-row2">
+            <div class="cr-field"><label>Estilo de Barba</label>
+              <select id="cr-beard" onchange="crUpdateAvatar()">
+                <option value="none">Sem Barba</option><option value="stubble">Barba Por Fazer</option>
+                <option value="full">Barba Cheia</option><option value="goatee">Cavanhaque</option>
+              </select></div>
+            <div class="cr-field"><label>Óculos</label>
+              <select id="cr-glasses" onchange="crUpdateAvatar()">
+                <option value="none">Sem Óculos</option><option value="square">Armação Quadrada</option>
+                <option value="round">Redondo Geek</option><option value="sun">Óculos Escuros</option>
+              </select></div>
+          </div>
+        </div>
+
+        <div class="cr-panel cr-id-card">
+          <span class="cr-tag">Crachá do Treinador</span>
+          <div>
+            <div id="cr-avatar" class="cr-avatar"></div>
+            <h3 id="cr-prev-name" style="font-size: 1.2rem;">Carlos Ancelotti</h3>
+            <p id="cr-prev-detail" class="cr-muted" style="margin-top: 4px;">🇧🇷 Brasil • 48 Anos</p>
+          </div>
+          <button class="btn-start" style="width: 100%;" onclick="crGoStep(2)">Avançar para Seleção de Clube →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PASSO 2: CLUBE -->
+    <div id="cr-step2" class="cr-wrap" style="display: none;">
+      <div class="cr-grid2">
+        <div id="cr-choice-create" class="cr-panel cr-choice" onclick="crSelectClubMode('CREATE')">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span class="cr-ico">✨</span><span class="cr-tag">Novo Time</span>
+          </div>
+          <div class="mode-title">Crie Seu Time</div>
+          <div class="mode-desc">Monte um clube do zero com nome, sigla, escudo, cores e força personalizados.</div>
+        </div>
+        <div id="cr-choice-existing" class="cr-panel cr-choice" onclick="crSelectClubMode('EXISTING')">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span class="cr-ico">🛡️</span><span class="cr-tag">Oficial</span>
+          </div>
+          <div class="mode-title">Time Existente</div>
+          <div class="mode-desc">Escolha um clube real entre dezenas de ligas e dispute o campeonato dele.</div>
+        </div>
+      </div>
+
+      <!-- CRIAR CLUBE -->
+      <div id="cr-create-panel" class="cr-panel" style="display: none;">
+        <div class="cr-panel-head"><h3>🖌️ Personalização do Clube</h3></div>
+        <div class="cr-grid3">
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <div class="cr-field"><label>Nome do Clube</label><input type="text" id="cr-c-name" value="Apex FC" maxlength="24" oninput="crUpdateCustom()"></div>
+            <div class="cr-field"><label>Sigla (3 letras)</label><input type="text" id="cr-c-short" value="APX" maxlength="3" oninput="crUpdateCustom()"></div>
+            <div class="cr-field"><label>Média de Overall (60 a 95)</label><input type="number" id="cr-c-ovr" value="78" min="60" max="95" oninput="crUpdateCustom()"></div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <div class="cr-field"><label>Símbolo do Escudo</label>
+              <select id="cr-c-icon" onchange="crUpdateCustom()">
+                <option value="⚡">⚡ Raio</option><option value="👑">👑 Coroa</option><option value="🐉">🐉 Dragão</option>
+                <option value="🔥">🔥 Chama</option><option value="⭐">⭐ Estrela</option><option value="🦁">🦁 Leão</option>
+                <option value="🦅">🦅 Águia</option><option value="🐺">🐺 Lobo</option><option value="⚽">⚽ Bola</option>
+              </select></div>
+            <div class="cr-row2">
+              <div class="cr-field"><label>Cor Primária</label><input type="color" id="cr-c-col1" value="#3b82f6" onchange="crUpdateCustom()"></div>
+              <div class="cr-field"><label>Cor Secundária</label><input type="color" id="cr-c-col2" value="#10b981" onchange="crUpdateCustom()"></div>
+            </div>
+            <div class="cr-field"><label>Liga onde vai jogar</label><select id="cr-c-league"></select></div>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; padding: 14px;">
+            <span class="cr-muted" style="text-transform: uppercase; letter-spacing: 1px;">Escudo Criado</span>
+            <div id="cr-c-badge"></div>
+            <b id="cr-c-prev-name" style="text-transform: uppercase;">Apex FC</b>
+            <div id="cr-c-stars" class="cr-stars"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CLUBE EXISTENTE -->
+      <div id="cr-existing-panel" class="cr-panel" style="display: none;">
+        <div class="cr-panel-head">
+          <h3>🏆 Selecione a Liga e o Time</h3>
+          <div class="cr-inline">
+            <select id="cr-league-select" onchange="crOnLeagueChange()"></select>
+            <input type="text" id="cr-team-search" placeholder="🔎 Buscar time..." oninput="crOnLeagueChange(true)">
+          </div>
+        </div>
+        <div class="cr-carousel">
+          <button class="cr-arrow" onclick="crNavTeam(-1)">‹</button>
+          <div id="cr-team-card" class="cr-team-card"></div>
+          <button class="cr-arrow" onclick="crNavTeam(1)">›</button>
+        </div>
+      </div>
+
+      <div class="cr-footer">
+        <button class="btn-back" onclick="crGoStep(1)">← Voltar</button>
+        <button class="btn-start" onclick="crStartCareer()">▶ Iniciar Carreira</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MODO CARREIRA: CENTRAL ============ -->
+  <div id="career-hub-screen" class="screen" style="display: none;">
+    <header class="cr-hub-header">
+      <div class="cr-hub-club">
+        <div id="cr-hub-badge"></div>
+        <div>
+          <div class="cr-hub-name"><span id="cr-hub-club-name">-</span><span id="cr-hub-short" class="cr-hub-short">-</span></div>
+          <div class="cr-muted" id="cr-hub-sub">-</div>
+        </div>
+        <div id="cr-hub-avatar" class="cr-avatar small"></div>
+      </div>
+      <div class="cr-hub-actions">
+        <button class="btn-back" onclick="crBackToMenu()">⌂ Menu</button>
+        <button id="cr-btn-sim-season" class="btn-start" onclick="crSimRest()">⏩ Simular Resto da Liga</button>
+      </div>
+    </header>
+
+    <nav class="cr-tabs">
+      <button id="cr-tab-central" class="cr-tab active" onclick="crSwitchTab('central')">🏠 Central</button>
+      <button id="cr-tab-standings" class="cr-tab" onclick="crSwitchTab('standings')">📊 Classificação</button>
+      <button id="cr-tab-calendar" class="cr-tab" onclick="crSwitchTab('calendar')">📅 Calendário</button>
+      <button id="cr-tab-playoffs" class="cr-tab" onclick="crSwitchTab('playoffs')">🏆 Mata-Mata</button>
+      <button id="cr-tab-history" class="cr-tab" onclick="crSwitchTab('history')">📖 Carreira</button>
+    </nav>
+
+    <main class="cr-main">
+      <!-- CENTRAL -->
+      <section id="cr-content-central" class="cr-content active">
+        <div class="cr-central-grid">
+          <div class="cr-card">
+            <div class="cr-card-head">
+              <h3 id="cr-live-title">Próximo Confronto do Seu Time</h3>
+              <span id="cr-stage-tag" class="cr-pill">Rodada 1</span>
+            </div>
+            <div id="cr-live-box" class="cr-live">
+              <span id="cr-live-notice" class="cr-tag">Aguardando apito inicial</span>
+              <div class="cr-live-teams">
+                <div class="cr-live-team"><div id="cr-live-home-badge"></div><span id="cr-live-home-name">-</span></div>
+                <div class="cr-live-mid">
+                  <span id="cr-live-timer" class="cr-pill" style="font-family: monospace;">00'</span>
+                  <div class="cr-score"><span id="cr-live-home-score">0</span> - <span id="cr-live-away-score">0</span></div>
+                </div>
+                <div class="cr-live-team"><div id="cr-live-away-badge"></div><span id="cr-live-away-name">-</span></div>
+              </div>
+              <div class="cr-progress"><div id="cr-live-progress"></div></div>
+              <div id="cr-live-events" class="cr-events"></div>
+            </div>
+            <div id="cr-banner" class="cr-banner" style="display: none;"></div>
+            <div class="cr-btn-row">
+              <button id="cr-btn-play" class="btn-start" onclick="crPlayBatch()">▶ Jogar Rodada (60s)</button>
+              <button id="cr-btn-instant" class="btn-ghost" onclick="crSimBatchInstant()">⏩ Simular Rodada</button>
+            </div>
+            <div class="cr-btn-row" style="grid-template-columns: 1fr;">
+              <button id="cr-btn-next-season" class="btn-start" style="display: none; background: var(--accent-green);" onclick="crNextSeason()">🔁 Iniciar Nova Temporada</button>
+            </div>
+          </div>
+
+          <div class="cr-card">
+            <div class="cr-card-head"><h3>📋 Demais Jogos</h3><span id="cr-side-label" class="cr-muted" style="text-transform: uppercase;">Rodada 1</span></div>
+            <div id="cr-side-list" class="cr-side-list"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CLASSIFICAÇÃO -->
+      <section id="cr-content-standings" class="cr-content">
+        <div class="cr-card">
+          <div class="cr-card-head"><h3>Classificação Geral da Liga</h3><span id="cr-standings-note" class="cr-pill">Classificam ao mata-mata</span></div>
+          <div class="cr-table-wrap">
+            <table class="cr-table">
+              <thead><tr><th>#</th><th style="text-align: left;">Clube</th><th>J</th><th>V</th><th>E</th><th>D</th><th>GP</th><th>GC</th><th>SG</th><th>PTS</th></tr></thead>
+              <tbody id="cr-standings-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- CALENDÁRIO -->
+      <section id="cr-content-calendar" class="cr-content">
+        <div class="cr-card">
+          <div class="cr-card-head"><h3>Calendário da Liga</h3><span id="cr-calendar-note" class="cr-muted"></span></div>
+          <div id="cr-calendar" class="cr-rounds"></div>
+        </div>
+      </section>
+
+      <!-- MATA-MATA -->
+      <section id="cr-content-playoffs" class="cr-content">
+        <div class="cr-card">
+          <div class="cr-card-head"><h3>🏆 Fase Mata-Mata</h3><span id="cr-playoff-note" class="cr-muted"></span></div>
+          <div id="cr-playoff-wrap"></div>
+        </div>
+      </section>
+
+      <!-- CARREIRA / HISTÓRICO -->
+      <section id="cr-content-history" class="cr-content">
+        <div class="cr-card">
+          <div class="cr-card-head"><h3>📖 Histórico do Treinador</h3></div>
+          <div id="cr-history-summary" class="cr-sum-grid"></div>
+          <div class="cr-table-wrap">
+            <table class="cr-table">
+              <thead><tr><th>Temp.</th><th>Posição</th><th>Pontos</th><th>Mata-Mata</th><th>Campeão</th></tr></thead>
+              <tbody id="cr-history-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- OVERLAY: CAMPEÃO DA LIGA -->
+  <div id="cr-champ-overlay" class="cr-overlay">
+    <div class="cr-overlay-box">
+      <div class="cr-trophy">🏆</div>
+      <div id="cr-champ-title" class="cr-overlay-title">Campeão da Liga!</div>
+      <div class="cr-overlay-name"><span id="cr-champ-badge"></span><span id="cr-champ-name">-</span></div>
+      <p id="cr-champ-sub" class="cr-muted">Avançando para a fase final em instantes...</p>
+    </div>
+  </div>
+
+  <!-- EASTER EGG: COPA SESI -->
+  <div id="cr-sesi-modal" class="cr-overlay">
+    <div class="cr-overlay-box red">
+      <span class="cr-tag" style="background: rgba(239,68,68,0.2); border-color: rgba(239,68,68,0.6); color: #fca5a5;">🔥 Easter Egg desbloqueado</span>
+      <div class="cr-overlay-title" style="font-size: 1.5rem;">Desafio Copa SESI FC</div>
+      <p class="cr-muted">Você chegou ao patamar máximo do futebol mundial! O confronto supremo contra o lendário e invencível <b style="color: #fca5a5;">SESI FC</b> começa agora.</p>
+      <div class="cr-sesi-chance"><span class="cr-muted" style="text-transform: uppercase;">Chance de vitória do seu time</span><b>1%</b></div>
+      <div class="cr-sesi-box">
+        <div class="cr-sesi-top">
+          <span id="cr-sesi-user">SEU TIME</span>
+          <span style="text-align: center;"><span id="cr-sesi-timer" class="cr-muted" style="font-family: monospace; display: block;">00'</span><b id="cr-sesi-score" style="font-size: 1.3rem;">0 - 0</b></span>
+          <span style="color: #fca5a5;">SESI FC</span>
+        </div>
+        <div id="cr-sesi-logs" class="cr-sesi-logs"><span>Aguardando apito inicial...</span></div>
+      </div>
+      <button id="cr-sesi-play" class="btn-danger" onclick="crRunSesi()">Jogar Copa SESI (60s reais / 1% de chance)</button>
+      <button id="cr-sesi-close" class="btn-back" style="width: 100%;" onclick="crCloseSesi()">Fechar</button>
+    </div>
+  </div>
+
+  <div id="cr-toast" class="cr-toast"></div>
+
+
+  <!-- ============ ESTADUALZÃO 5x5 CO-OP: SALA ============ -->
+  <div id="fs-setup-screen" class="screen" style="display: none;">
+    <div class="cr-topbar">
+      <button class="btn-back" onclick="fsExit()">← Menu Principal</button>
+      <h1 class="setup-title" style="margin-top: 0;">⚽ Estadualzão 5x5 (Co-op)</h1>
+      <div style="width: 120px;"></div>
+    </div>
+
+    <!-- PASSO A: conectar -->
+    <div id="fs-stage-connect" class="cr-wrap">
+      <div class="cr-grid3">
+        <div class="cr-panel">
+          <div class="cr-panel-head"><h3>🧑 Seu Jogador</h3></div>
+          <div class="cr-field"><label>Seu apelido</label><input type="text" id="fs-nick" value="Craque" maxlength="14"></div>
+          <p class="cr-muted">Cada amigo controla <b>um</b> jogador: goleiro, fixo, ala esquerda, ala direita ou pivô. Postos sem ninguém ficam com a IA.</p>
+          <div class="fs-keys">
+            <div><b>Mover</b><span>W A S D / setas</span></div>
+            <div><b>Chutar</b><span>Espaço ou J (segure p/ força)</span></div>
+            <div><b>Passar</b><span>K ou E</span></div>
+            <div><b>Correr</b><span>Shift ou L</span></div>
+          </div>
+        </div>
+
+        <div class="cr-panel">
+          <div class="cr-panel-head"><h3>🛡️ Seu Time Novo</h3></div>
+          <div class="cr-field"><label>Nome do time</label><input type="text" id="fs-t-name" value="Estrelas FC" maxlength="22" oninput="fsUpdateTeamPreview()"></div>
+          <div class="cr-row2">
+            <div class="cr-field"><label>Sigla (3 letras)</label><input type="text" id="fs-t-short" value="EST" maxlength="3" oninput="fsUpdateTeamPreview()"></div>
+            <div class="cr-field"><label>Símbolo</label>
+              <select id="fs-t-icon" onchange="fsUpdateTeamPreview()">
+                <option value="⭐">⭐ Estrela</option><option value="⚡">⚡ Raio</option><option value="👑">👑 Coroa</option>
+                <option value="🐉">🐉 Dragão</option><option value="🔥">🔥 Chama</option><option value="🦁">🦁 Leão</option>
+                <option value="🦅">🦅 Águia</option><option value="🐺">🐺 Lobo</option><option value="⚽">⚽ Bola</option>
+              </select></div>
+          </div>
+          <div class="cr-row2">
+            <div class="cr-field"><label>Cor da camisa</label><input type="color" id="fs-t-c1" value="#2563eb" onchange="fsUpdateTeamPreview()"></div>
+            <div class="cr-field"><label>Cor do detalhe</label><input type="color" id="fs-t-c2" value="#f8fafc" onchange="fsUpdateTeamPreview()"></div>
+          </div>
+          <div style="display: flex; align-items: center; justify-content: center; gap: 12px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px;">
+            <div id="fs-t-badge"></div><b id="fs-t-prev" style="text-transform: uppercase;">Estrelas FC</b>
+          </div>
+        </div>
+
+        <div class="cr-panel">
+          <div class="cr-panel-head"><h3>🏆 Torneio</h3></div>
+          <div class="cr-row2">
+            <div class="cr-field"><label>Times no torneio</label>
+              <select id="fs-cfg-teams"><option value="128">128 times</option><option value="64">64 times</option><option value="32">32 times</option><option value="16">16 times</option><option value="8">8 times</option></select></div>
+            <div class="cr-field"><label>Duração da partida</label>
+              <select id="fs-cfg-dur"><option value="60">1 minuto</option><option value="120" selected>2 minutos</option><option value="180">3 minutos</option><option value="300">5 minutos</option></select></div>
+          </div>
+          <div class="cr-field"><label>Dificuldade dos adversários</label>
+            <select id="fs-cfg-diff"><option value="0">Fácil</option><option value="1" selected>Normal</option><option value="2">Difícil</option></select></div>
+          <p class="cr-muted">Mata-mata em jogo único. Empate vai para o gol de ouro e, se continuar, pênaltis.</p>
+          <button class="btn-start" onclick="fsSolo()">🎮 Jogar Sozinho (IA nos outros postos)</button>
+          <button class="btn-start" style="background: var(--accent-green);" onclick="fsHostRoom()">🌐 Criar Sala com Amigos</button>
+          <div class="cr-inline" style="margin-top: 4px;">
+            <input type="text" id="fs-join-code" placeholder="Código da sala" maxlength="6" style="text-transform: uppercase; flex: 1;">
+            <button class="btn-ghost" style="padding: 9px 16px;" onclick="fsJoinRoom()">Entrar</button>
+          </div>
+          <div id="fs-conn-status" class="cr-muted"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PASSO B: sala / escolha de posições -->
+    <div id="fs-stage-lobby" class="cr-wrap" style="display: none;">
+      <div class="cr-panel">
+        <div class="cr-panel-head">
+          <h3>🚪 Sala <span id="fs-room-code" class="fs-code">-----</span></h3>
+          <span id="fs-room-mode" class="cr-tag">Host</span>
+        </div>
+        <p class="cr-muted" id="fs-room-hint">Escolha sua posição clicando em um cartão. Compartilhe o código com seus amigos.</p>
+        <div id="fs-roles" class="fs-roles"></div>
+        <div class="cr-footer">
+          <div id="fs-lobby-info" class="cr-muted"></div>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn-back" onclick="fsLeaveRoom()">Sair da sala</button>
+            <button id="fs-btn-start" class="btn-start" onclick="fsStartTournament()">▶ Iniciar Torneio</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ ESTADUALZÃO: CHAVEAMENTO ============ -->
+  <div id="fs-hub-screen" class="screen" style="display: none;">
+    <div class="cr-topbar">
+      <button class="btn-back" onclick="fsLeaveRoom()">← Sair</button>
+      <h1 class="setup-title" style="margin-top: 0;">🏆 Estadualzão</h1>
+      <span id="fs-hub-code" class="cr-tag">Sala</span>
+    </div>
+    <div class="cr-wrap">
+      <div id="fs-hub-banner" class="cr-banner" style="display: none;"></div>
+      <div class="cr-grid2">
+        <div class="cr-panel" id="fs-next-card"></div>
+        <div class="cr-panel">
+          <div class="cr-panel-head"><h3>📖 Sua Campanha</h3></div>
+          <div id="fs-hist" class="fs-hist"></div>
+        </div>
+      </div>
+      <div class="cr-panel">
+        <div class="cr-panel-head">
+          <h3>📊 Chaveamento</h3>
+          <select id="fs-round-select" onchange="fsRenderBracket()" style="padding: 6px 10px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-input); color: var(--text-main);"></select>
+        </div>
+        <div id="fs-bracket" class="fs-bracket"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ ESTADUALZÃO: PARTIDA ============ -->
+  <div id="fs-game-screen" style="display: none;">
+    <canvas id="fs-canvas"></canvas>
+    <div id="fs-hud" class="fs-hud">
+      <div class="fs-hud-team"><span id="fs-hud-b0"></span><b id="fs-hud-n0">-</b></div>
+      <div class="fs-hud-mid">
+        <div class="fs-score"><span id="fs-hud-s0">0</span><i>x</i><span id="fs-hud-s1">0</span></div>
+        <div id="fs-hud-clock" class="fs-clock">00:00</div>
+        <div id="fs-hud-round" class="fs-round">-</div>
+      </div>
+      <div class="fs-hud-team right"><b id="fs-hud-n1">-</b><span id="fs-hud-b1"></span></div>
+    </div>
+    <button class="fs-quit" onclick="fsQuitMatch()">✕</button>
+    <div id="fs-role-tag" class="fs-role-tag"></div>
+    <div id="fs-touch" class="fs-touch">
+      <div id="fs-joy" class="fs-joy"><div id="fs-joy-knob" class="fs-joy-knob"></div></div>
+      <div class="fs-btns">
+        <button id="fs-btn-pass" class="fs-btn b">PASSE</button>
+        <button id="fs-btn-sprint" class="fs-btn c">CORRER</button>
+        <button id="fs-btn-shoot" class="fs-btn a">CHUTE</button>
+      </div>
+    </div>
+    <div id="fs-end" class="cr-overlay">
+      <div class="cr-overlay-box">
+        <div class="cr-overlay-title" id="fs-end-title">Fim de jogo</div>
+        <div class="cr-overlay-name" id="fs-end-score">0 x 0</div>
+        <p id="fs-end-sub" class="cr-muted"></p>
+      </div>
+    </div>
+  </div>
+
+
+  <script src="js/leilao.js?v=1"></script>
+  <script src="js/carreira-dados.js?v=1"></script>
+  <script src="js/carreira.js?v=1"></script>
+  <script src="js/estadualzao-motor.js?v=1"></script>
+  <script src="js/estadualzao-torneio.js?v=1"></script>
+  <script src="js/estadualzao-interface.js?v=1"></script>
+  <div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#94a3b8;opacity:.6;z-index:9999;pointer-events:none;">versão: 60s + trocas p/ todos</div>
 </body>
 </html>
