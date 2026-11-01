@@ -46,7 +46,7 @@
     function fsCreateMatch(o) {
       const G = { dur: o.dur || 120, clock: 0, phase: 'kickoff', phaseT: 3.2, golden: false, goldenLeft: 0,
         score: [0, 0], ball: { x: FS_W / 2, y: FS_H / 2, vx: 0, vy: 0, owner: -1 }, players: [], msg: '', msgT: 0,
-        over: false, lastTouch: -1, concede: 0, t: 0, sfx: [], stillT: 0 };
+        over: false, lastTouch: -1, touchLog: [], events: [], allowDraw: !!o.allowDraw, concede: 0, t: 0, sfx: [], stillT: 0 };
       for (let tm = 0; tm < 2; tm++) {
         FS_ROLE_ORDER.forEach((role, k) => {
           const hm = tm === 0 && o.humans && o.humans[role] ? o.humans[role] : null;
@@ -74,7 +74,7 @@
       b.owner = -1;
       b.x = p.x + nx * (FS_PR + FS_BR + 2); b.y = p.y + ny * (FS_PR + FS_BR + 2);
       b.vx = nx * speed + p.vx * 0.25; b.vy = ny * speed + p.vy * 0.25;
-      p.ctrlCd = 0.32; p.tkT = 0; G.lastTouch = p.i;
+      p.ctrlCd = 0.32; p.tkT = 0; fsTouch(G, p.i);
       G.sfx.push('kick');
     }
 
@@ -353,7 +353,7 @@
           const d = fsDist(p.x, p.y, b.x, b.y);
           if (d < FS_CTRL && d < bd && Math.hypot(b.vx - p.vx, b.vy - p.vy) < 330) { best = p; bd = d; }
         });
-        if (best) { b.owner = best.i; G.lastTouch = best.i; best.tkT = 0; b.shield = 0.55; }
+        if (best) { b.owner = best.i; fsTouch(G, best.i); best.tkT = 0; b.shield = 0.55; }
       } else {
         ps.forEach(p => {
           if (p.team === o.team) return;
@@ -362,7 +362,7 @@
             p.tkT += dt * (o.sprintOn && !p.sprintOn ? 0.5 : 1);
             const need = p.h !== null ? 0.26 : 0.55 - 0.18 * p.sk;
             if (p.tkT > need) {
-              b.owner = p.i; G.lastTouch = p.i; o.ctrlCd = 0.7; p.tkT = 0; b.shield = 0.55;
+              b.owner = p.i; fsTouch(G, p.i); o.ctrlCd = 0.7; p.tkT = 0; b.shield = 0.55;
               b.vx += (p.x - o.x) * 0.5; b.vy += (p.y - o.y) * 0.5;
               G.sfx.push('tackle');
             }
@@ -427,16 +427,33 @@
           const nx = dx / d, ny = dy / d;
           b.x = p.x + nx * md; b.y = p.y + ny * md;
           const rv = (b.vx - p.vx) * nx + (b.vy - p.vy) * ny;
-          if (rv < 0) { const j = -(1 + 0.55) * rv * 0.85; b.vx += nx * j; b.vy += ny * j; G.lastTouch = p.i; }
+          if (rv < 0) { const j = -(1 + 0.55) * rv * 0.85; b.vx += nx * j; b.vy += ny * j; fsTouch(G, p.i); }
         }
       });
       if (b.x >= 0 && b.x <= FS_W) b.y = fsClamp(b.y, FS_BR, FS_H - FS_BR);
     }
 
+    // histórico de toques: quem pegou/chutou a bola por último (para dar gol e assistência ao jogador certo)
+    function fsTouch(G, i) {
+      const L = G.touchLog;
+      if (!L.length || L[L.length - 1].i !== i) { L.push({ i, t: G.t }); if (L.length > 8) L.shift(); }
+      G.lastTouch = i;
+    }
+
     function fsGoal(G, scoringTeam) {
       G.score[scoringTeam]++;
-      const sc = G.players[G.lastTouch];
-      G.msg = '⚽ GOOOL! ' + (sc ? (sc.name || FS_ROLES[sc.role].name) : '');
+      const L = G.touchLog; let si = -1;
+      for (let k = L.length - 1; k >= 0; k--) if (G.players[L[k].i].team === scoringTeam) { si = k; break; }
+      let sc = null, asst = null, own = false;
+      if (si >= 0 && G.t - L[si].t < 10) {
+        sc = G.players[L[si].i];   // defesa do goleiro/zagueiro que desvia a bola para dentro não tira o gol de quem chutou
+        const pv = si > 0 ? G.players[L[si - 1].i] : null;
+        if (pv && pv.team === scoringTeam && pv.i !== sc.i && G.t - L[si].t < 6) asst = pv;   // passe de companheiro até 6s antes
+      } else if (L.length && G.players[L[L.length - 1].i].team !== scoringTeam) own = true;     // sem chute recente: gol contra
+      const last = L.length ? G.players[L[L.length - 1].i] : null;
+      G.events.push({ team: scoringTeam, g: sc ? sc.i : -1, a: asst ? asst.i : -1, og: own ? 1 : 0, clk: Math.round(G.clock) });
+      G.msg = '⚽ GOOOL! ' + (sc ? (sc.name || FS_ROLES[sc.role].name) : own && last ? (last.name || FS_ROLES[last.role].name) + ' (contra)' : '');
+      G.lastTouch = -1; G.touchLog = [];
       G.msgT = 2.6; G.phase = 'goal'; G.phaseT = 2.6; G.concede = 1 - scoringTeam;
       G.ball.owner = -1; G.ball.vx *= 0.3; G.ball.vy *= 0.3;
       G.sfx.push('goal');
@@ -465,7 +482,7 @@
       if (!G.golden) {
         G.clock += dt;
         if (G.clock >= G.dur) {
-          if (G.score[0] !== G.score[1]) { fsEnd(G); return; }
+          if (G.score[0] !== G.score[1] || G.allowDraw) { fsEnd(G); return; }
           G.golden = true; G.goldenLeft = Math.min(45, G.dur * 0.4); G.msg = '🥇 Gol de ouro! Quem marcar vence'; G.msgT = 3;
           G.sfx.push('whistle');
         }
