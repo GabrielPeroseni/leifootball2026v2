@@ -7,7 +7,7 @@
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <link rel="stylesheet" href="css/base.css?v=2">
   <link rel="stylesheet" href="css/carreira.css?v=2">
-  <link rel="stylesheet" href="css/estadualzao.css?v=2">
+  <link rel="stylesheet" href="css/estadualzao.css?v=3">
 </head>
 <body>
 
@@ -28,7 +28,7 @@
       <div class="mode-card" onclick="selectGameMode('estadualzao')">
         <div class="mode-icon">🏟️</div>
         <div class="mode-title">Estadualzão 5x5 Co-op</div>
-        <div class="mode-desc">Cada amigo controla um jogador (goleiro, fixo, alas e pivô) do mesmo time e disputa um mata-mata contra até 128 times.</div>
+        <div class="mode-desc">Cada amigo controla um jogador (goleiro, fixo, alas e pivô) do mesmo time e disputa o campeonato (sorteio, grupos e mata-mata) contra até 128 times, com temporadas e estatísticas.</div>
       </div>
 
       <div class="mode-card disabled" onclick="selectGameMode('estrelato')">
@@ -757,7 +757,7 @@
           </div>
           <div class="cr-field"><label>Dificuldade dos adversários</label>
             <select id="fs-cfg-diff"><option value="0">Fácil</option><option value="1" selected>Normal</option><option value="2">Difícil</option></select></div>
-          <p class="cr-muted">Mata-mata em jogo único. Empate vai para o gol de ouro e, se continuar, pênaltis.</p>
+          <p class="cr-muted">Sorteio por potes, fase de grupos (3 jogos, passam os 2 melhores) e mata-mata em jogo único. No mata-mata, empate vai para o gol de ouro e, se continuar, pênaltis. Ao fim de cada temporada você vê jogos, gols e assistências de cada jogador.</p>
           <button class="btn-start" onclick="fsSolo()">🎮 Jogar Sozinho (IA nos outros postos)</button>
           <button class="btn-start" style="background: var(--accent-green);" onclick="fsHostRoom()">🌐 Criar Sala com Amigos</button>
           <div class="cr-inline" style="margin-top: 4px;">
@@ -789,11 +789,36 @@
     </div>
   </div>
 
-  <!-- ============ ESTADUALZÃO: CHAVEAMENTO ============ -->
+  <!-- ============ ESTADUALZÃO: SORTEIO DOS GRUPOS ============ -->
+  <div id="fs-draw-screen" class="screen" style="display: none;">
+    <div class="brasfoot-header" style="width:100%; max-width:1400px;">
+      <h2 style="color:var(--text-main); font-size: 1.2rem; text-transform: uppercase; letter-spacing: 1px;">🎲 Sorteio dos Grupos</h2>
+      <p id="fs-draw-sub" style="color:var(--text-muted); font-size:0.85rem; margin-top:2px;">-</p>
+    </div>
+    <div class="fs-draw-grid">
+      <div class="fs-draw-stage">
+        <div id="fs-draw-pot" class="cr-tag">Pote 1</div>
+        <div id="fs-draw-card" class="fs-draw-card"></div>
+        <div class="fs-draw-bar"><div id="fs-draw-bar-in"></div></div>
+        <div id="fs-draw-count" class="cr-muted">0 / 0 times sorteados</div>
+        <div id="fs-draw-mine" class="cr-muted" style="text-align:center;"></div>
+        <button id="fs-draw-skip" class="btn-back" onclick="fsDrawSkip()">⏭ Pular sorteio</button>
+        <button id="fs-draw-go" class="btn-start" style="display:none;" onclick="fsDrawContinue()">▶ Iniciar Fase de Grupos</button>
+        <p id="fs-draw-wait" class="cr-muted" style="display:none; text-align:center;">Aguardando o host iniciar a fase de grupos...</p>
+        <button class="btn-back" onclick="fsLeaveRoom()" style="margin-top:auto;">← Sair</button>
+      </div>
+      <div class="league-table-container" style="min-height:0;">
+        <h3 style="color:var(--text-main); text-align:center; font-size:0.95rem; text-transform:uppercase;">Grupos</h3>
+        <div id="fs-draw-groups" class="fs-draw-groups"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ ESTADUALZÃO: CAMPEONATO (grupos + mata-mata) ============ -->
   <div id="fs-hub-screen" class="screen" style="display: none;">
     <div class="cr-topbar">
       <button class="btn-back" onclick="fsLeaveRoom()">← Sair</button>
-      <h1 class="setup-title" style="margin-top: 0;">🏆 Estadualzão</h1>
+      <h1 class="setup-title" style="margin-top: 0;" id="fs-hub-title">🏆 Estadualzão</h1>
       <span id="fs-hub-code" class="cr-tag">Sala</span>
     </div>
     <div class="cr-wrap">
@@ -806,11 +831,46 @@
         </div>
       </div>
       <div class="cr-panel">
+        <div class="cr-panel-head"><h3>📈 Estatísticas dos Jogadores</h3><span id="fs-stats-tag" class="cr-tag">Temporada 1</span></div>
+        <div id="fs-stats" class="cr-table-wrap"></div>
+      </div>
+      <div class="cr-panel">
         <div class="cr-panel-head">
-          <h3>📊 Chaveamento</h3>
-          <select id="fs-round-select" onchange="fsRenderBracket()" style="padding: 6px 10px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-input); color: var(--text-main);"></select>
+          <div class="fs-tabs">
+            <button id="fs-tab-groups" class="fs-tab" onclick="fsSetTab('groups')">Fase de Grupos</button>
+            <button id="fs-tab-ko" class="fs-tab" onclick="fsSetTab('ko')">Mata-Mata</button>
+          </div>
+          <select id="fs-group-select" onchange="fsRenderGroups()" class="fs-sel"></select>
+          <select id="fs-round-select" onchange="fsRenderBracket()" class="fs-sel"></select>
         </div>
+        <div id="fs-groups" class="fs-groups-grid"></div>
         <div id="fs-bracket" class="fs-bracket"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ ESTADUALZÃO: FIM DE TEMPORADA ============ -->
+  <div id="fs-season-screen" class="screen" style="display: none;">
+    <h1 class="setup-title" id="fs-season-title" style="margin-top: 0;">👑 Fim da Temporada</h1>
+    <p id="fs-season-sub" style="color:#60a5fa; font-weight:600; text-align:center; font-size:0.9rem;">-</p>
+    <div class="podium-container" style="height: 260px; flex-shrink: 0;">
+      <div class="podium-step podium-2" id="fs-pod-2" style="height:140px;"><div class="pod-badge"></div><div style="font-size:0.8rem; margin-top:4px;">🥈 Vice</div><div class="podium-team-name"></div></div>
+      <div class="podium-step podium-1" id="fs-pod-1" style="height:195px;"><div class="trophy">🏆</div><div class="pod-badge"></div><div style="font-size:0.85rem; margin-top:4px;">1º CAMPEÃO</div><div class="podium-team-name"></div></div>
+      <div class="podium-step podium-3" id="fs-pod-3" style="height:105px;"><div class="pod-badge"></div><div style="font-size:0.75rem; margin-top:4px;">🥉 3º LUGAR</div><div class="podium-team-name"></div></div>
+    </div>
+    <div class="cr-wrap" style="max-width: 900px;">
+      <div id="fs-season-me" class="cr-banner"></div>
+      <div class="cr-panel">
+        <div class="cr-panel-head"><h3>📈 Estatísticas da Temporada</h3><span id="fs-season-tag" class="cr-tag">Temporada 1</span></div>
+        <div id="fs-season-stats" class="cr-table-wrap"></div>
+      </div>
+      <div class="cr-panel" id="fs-season-hist-box" style="display:none;">
+        <div class="cr-panel-head"><h3>📚 Histórico de Temporadas</h3></div>
+        <div id="fs-season-hist" class="cr-table-wrap"></div>
+      </div>
+      <div class="cr-footer" style="flex-wrap: wrap;">
+        <button class="btn-back" onclick="fsViewHubAtEnd(true)">📊 Ver grupos e chave</button>
+        <div id="fs-season-actions" style="display:flex; gap:8px; flex-wrap:wrap;"></div>
       </div>
     </div>
   </div>
@@ -841,18 +901,20 @@
       <div class="cr-overlay-box">
         <div class="cr-overlay-title" id="fs-end-title">Fim de jogo</div>
         <div class="cr-overlay-name" id="fs-end-score">0 x 0</div>
+        <div id="fs-end-scorers" class="fs-end-scorers"></div>
         <p id="fs-end-sub" class="cr-muted"></p>
       </div>
     </div>
   </div>
 
 
-  <script src="js/leilao.js?v=2"></script>
-  <script src="js/carreira-dados.js?v=2"></script>
-  <script src="js/carreira.js?v=2"></script>
-  <script src="js/estadualzao-motor.js?v=2"></script>
-  <script src="js/estadualzao-torneio.js?v=2"></script>
-  <script src="js/estadualzao-interface.js?v=2"></script>
-  <div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#94a3b8;opacity:.6;z-index:9999;pointer-events:none;">versão: 60s + trocas p/ todos</div>
+  <script src="js/leilao.js?v=3"></script>
+  <script src="js/carreira-dados.js?v=3"></script>
+  <script src="js/carreira.js?v=3"></script>
+  <script src="js/estadualzao-motor.js?v=3"></script>
+  <script src="js/estadualzao-torneio.js?v=3"></script>
+  <script src="js/estadualzao-escudos.js?v=3"></script>
+  <script src="js/estadualzao-interface.js?v=3"></script>
+  <div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#94a3b8;opacity:.6;z-index:9999;pointer-events:none;">versão: campeonato 5x5 + escudos</div>
 </body>
 </html>
