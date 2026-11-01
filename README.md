@@ -4,7 +4,7 @@ Jogo de futebol com vários modos, feito em HTML + CSS + JavaScript puro (sem bu
 
 ## Modos
 - **Leilão** — leilão de jogadores online com amigos (PeerJS), mata-mata e troca de reforços na 2ª temporada.
-- **Modo Carreira** — treinador personalizado, clube real ou criado, liga + mata-mata, várias temporadas, salva no navegador.
+- **Modo Carreira** — *(desativado por enquanto: aparece como "Em Breve" no menu)*. O código continua em `js/carreira*.js` e é reaproveitado pelo Estadualzão (base de clubes e escudos).
 - **Estadualzão 5x5 Co-op** — cada amigo controla um jogador do time (goleiro, fixo, alas e pivô) em partidas em tempo real contra até 128 times.
 
 ## Estrutura
@@ -20,6 +20,8 @@ js/estadualzao-motor.js         motor da partida: física, bola e IA (roda no ho
 js/estadualzao-torneio.js       torneio de até 128 times
 js/estadualzao-interface.js     sala, rede, telas, controles e desenho do campo
 ```
+
+> Para reativar o Modo Carreira: em `index.html`, tire a classe `disabled` do card dele e a etiqueta "Em Breve"; em `js/leilao.js`, na função `selectGameMode`, volte o ramo `mode === 'carreira'` chamando `crOpenSetup()`.
 
 ## Ordem dos scripts (importante)
 Os arquivos JS compartilham as mesmas variáveis globais e **precisam carregar nesta ordem** (já está assim no `index.html`):
