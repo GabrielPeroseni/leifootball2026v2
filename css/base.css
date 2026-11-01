@@ -46,11 +46,14 @@
       inset: 0;
       z-index: 200;
       padding: 20px;
+      overflow-y: auto;
+      justify-content: flex-start;
     }
 
     .menu-header {
       text-align: center;
       margin-bottom: 40px;
+      margin-top: auto;
     }
 
     .menu-title {
@@ -78,6 +81,7 @@
       gap: 20px;
       width: 100%;
       max-width: 950px;
+      margin-bottom: auto;
     }
 
     .mode-card {

@@ -63,8 +63,6 @@
       if (mode === 'leilao') {
         document.getElementById('main-menu-screen').style.display = 'none';
         document.getElementById('setup-screen').style.display = 'flex';
-      } else if (mode === 'carreira') {
-        crOpenSetup();
       } else if (mode === 'estadualzao') {
         fsOpenSetup();
       } else {
